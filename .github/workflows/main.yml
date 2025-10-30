@@ -1,0 +1,49 @@
+name: Deploy Astro to VPS
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Check dist directory
+        run: |
+          echo "=== 检查 dist 目录 ==="
+          ls -la
+          if [ -d "dist" ]; then
+            echo "✅ dist 目录存在"
+            ls -la dist/
+            echo "=== dist 目录内容 ==="
+            find dist/ -type f | head -20
+          else
+            echo "❌ dist 目录不存在"
+            exit 1
+          fi
+
+      - name: Deploy dist to VPS
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST }}
+          REMOTE_USER: ${{ secrets.VPS_USER }}
+          TARGET: ${{ secrets.VPS_SITE_PATH }}
+          SOURCE: "dist/"  # Astro 静态输出目录
+          ARGS: "-avz --delete"
