@@ -16,7 +16,7 @@ export async function getStaticPaths() {
   return docs
     .filter(doc => shouldShowContent(doc, isDev))
     .map(doc => ({
-      params: { slug: doc.id },
+      params: { slug: doc.slug },
       props: { documentation: doc }
     }));
 }
