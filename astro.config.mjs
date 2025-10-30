@@ -18,7 +18,6 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import { siteConfig } from './src/config.ts';
 import swup from '@swup/astro';
 
-// Deployment platform configuration
 const DEPLOYMENT_PLATFORM = process.env.DEPLOYMENT_PLATFORM || 'netlify';
 
 export default defineConfig({
@@ -30,20 +29,20 @@ export default defineConfig({
     enabled: true
   },
   redirects: {
-  '/about-me': '/about',
-  '/about-us': '/about',
-  '/contact-me': '/contact',
-  '/contact-us': '/contact',
-  '/privacy': '/privacy-policy',
-  '/posts/mermaid-test': '/posts/mermaid-diagrams',
-  '/posts/mermaid-diagram-test': '/posts/mermaid-diagrams',
-  '/posts/astro-suite-vault-modular-guide': '/posts/obsidian-vault-guide',
-  '/posts/astro-suite-obsidian-vault-guide-astro-modular': '/posts/obsidian-vault-guide',
-  '/projects/obsidian-astro-composer': '/projects/astro-composer',
-  '/docs/api-reference': '/docs/api',
-  '/docs/astro-modular-configuration': '/docs/configuration',
-  '/docs/sourcetree-and-git': '/docs/sourcetree-and-git-setup'
-},
+    '/about-me': '/about',
+    '/about-us': '/about',
+    '/contact-me': '/contact',
+    '/contact-us': '/contact',
+    '/privacy': '/privacy-policy',
+    '/posts/mermaid-test': '/posts/mermaid-diagrams',
+    '/posts/mermaid-diagram-test': '/posts/mermaid-diagrams',
+    '/posts/astro-suite-vault-modular-guide': '/posts/obsidian-vault-guide',
+    '/posts/astro-suite-obsidian-vault-guide-astro-modular': '/posts/obsidian-vault-guide',
+    '/projects/obsidian-astro-composer': '/projects/astro-composer',
+    '/docs/api-reference': '/docs/api',
+    '/docs/astro-modular-configuration': '/docs/configuration',
+    '/docs/sourcetree-and-git': '/docs/sourcetree-and-git-setup'
+  },
   image: {
     service: {
       entrypoint: 'astro/assets/services/sharp',
@@ -70,19 +69,16 @@ export default defineConfig({
       updateHead: true,
       updateBodyClass: false,
       globalInstance: true,
-      plugins: [], // Disable all plugins including scroll
+      plugins: [],
       skipPopStateHandling: (event) => {
-        // ALWAYS skip Swup handling for back/forward navigation
-        // Let the browser handle it naturally
         return true;
       },
-      // Simplified link selector for better compatibility
       linkSelector: 'a[href]:not([data-no-swup]):not([href^="mailto:"]):not([href^="tel:"])'
     })
   ],
   markdown: {
-        remarkPlugins: [
-          remarkInternalLinks,
+    remarkPlugins: [
+      remarkInternalLinks,
       remarkFolderImages,
       remarkObsidianEmbeds,
       remarkImageCaptions,
@@ -114,6 +110,9 @@ export default defineConfig({
         }
       }]
     ],
+    image: {
+      inferSize: false
+    },
     shikiConfig: {
       theme: 'github-dark',
       wrap: true
@@ -138,17 +137,15 @@ export default defineConfig({
       hmr: false,
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate'
+      },
+      watch: {
+        usePolling: process.platform === 'win32',
+        interval: 1000
       }
     },
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
       'process.env.ASTRO_CONTENT_COLLECTION_CACHE': 'false'
-    },
-    server: {
-      watch: {
-        usePolling: process.platform === 'win32', // Use polling on Windows for better file watching
-        interval: 1000
-      }
     },
     optimizeDeps: {
       exclude: ['astro:content']
