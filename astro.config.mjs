@@ -18,10 +18,16 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import { siteConfig } from './src/config.ts';
 import swup from '@swup/astro';
 
+// Deployment platform configuration
 const DEPLOYMENT_PLATFORM = process.env.DEPLOYMENT_PLATFORM || 'netlify';
 
 export default defineConfig({
   site: siteConfig.site,
+  // 🔧 修复1: 添加 base 配置（根据你的部署平台调整）
+  base: process.env.CF_PAGES_URL ? new URL(process.env.CF_PAGES_URL).pathname : '/',
+  // 🔧 修复2: 统一路径格式
+  trailingSlash: 'always',
+  
   deployment: {
     platform: DEPLOYMENT_PLATFORM
   },
@@ -43,7 +49,7 @@ export default defineConfig({
     '/docs/astro-modular-configuration': '/docs/configuration',
     '/docs/sourcetree-and-git': '/docs/sourcetree-and-git-setup'
   },
-  // 关键修改：完全禁用 Astro 图片服务
+  // 🔧 修复3: 临时禁用图片服务解决构建错误
   image: {
     service: undefined
   },
@@ -90,23 +96,6 @@ export default defineConfig({
     rehypePlugins: [
       rehypeKatex,
       rehypeMark,
-      // 修改 rehypeOptimizeImages 插件，跳过远程图片
-      function skipRemoteImages() {
-        return (tree) => {
-          const { visit } = require('unist-util-visit');
-          visit(tree, 'element', (node) => {
-            if (node.tagName === 'img') {
-              const src = node.properties?.src;
-              // 如果是远程图片，移除所有优化属性
-              if (src && (src.startsWith('http://') || src.startsWith('https://'))) {
-                delete node.properties.loading;
-                delete node.properties.decoding;
-              }
-            }
-          });
-        };
-      },
-      // 保留原有的 rehypeOptimizeImages 用于本地图片
       rehypeOptimizeImages,
       [rehypeSlug, {
         test: (node) => node.tagName !== 'h1'
@@ -120,7 +109,7 @@ export default defineConfig({
         }
       }]
     ],
-    // 关键修改：禁用所有图片处理
+    // 🔧 修复4: 禁用图片推断
     image: {
       inferSize: false
     },
@@ -138,20 +127,6 @@ export default defineConfig({
         '@/utils': new URL('./src/utils', import.meta.url).pathname,
         '@/types': new URL('./src/types.ts', import.meta.url).pathname,
         '@/config': new URL('./src/config.ts', import.meta.url).pathname
-      }
-    },
-    server: {
-      host: 'localhost',
-      port: 5000,
-      allowedHosts: [],
-      middlewareMode: false,
-      hmr: false,
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      },
-      watch: {
-        usePolling: process.platform === 'win32',
-        interval: 1000
       }
     },
     define: {
