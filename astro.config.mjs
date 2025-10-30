@@ -113,6 +113,9 @@ export default defineConfig({
     image: {
       inferSize: false
     },
+    markdownComponents: {
+    img: '@components/ImageWrapper.astro'
+    },
     shikiConfig: {
       theme: 'github-dark',
       wrap: true
