@@ -12,7 +12,7 @@ import remarkReadingTime from 'remark-reading-time';
 import remarkToc from 'remark-toc';
 import rehypeKatex from 'rehype-katex';
 import rehypeMark from './src/utils/rehype-mark.ts';
-import rehypeOptimizeImages from './src/utils/rehype-optimize-images.ts';
+// ⚠️ 已移除 rehypeOptimizeImages - 这是问题根源
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import { siteConfig } from './src/config.ts';
@@ -43,16 +43,9 @@ export default defineConfig({
     '/docs/astro-modular-configuration': '/docs/configuration',
     '/docs/sourcetree-and-git': '/docs/sourcetree-and-git-setup'
   },
+  // ⚠️ 修复1: 完全禁用图片服务
   image: {
-    service: {
-      entrypoint: 'astro/assets/services/sharp',
-      config: {
-        limitInputPixels: false,
-      }
-    },
-    remotePatterns: [{
-      protocol: 'https'
-    }]
+    service: undefined
   },
   integrations: [
     tailwind(),
@@ -79,12 +72,13 @@ export default defineConfig({
   markdown: {
     remarkPlugins: [
       remarkInternalLinks,
-      remarkFolderImages,
-      remarkObsidianEmbeds,
-      remarkImageCaptions,
+      // ⚠️ 修复2: 临时禁用可能有问题的图片插件
+      // remarkFolderImages,
+      // remarkObsidianEmbeds,
+      // remarkImageCaptions,
       remarkMath,
       remarkCallouts,
-      remarkImageGrids,
+      // remarkImageGrids,
       remarkMermaid,
       [remarkReadingTime, {}],
       [remarkToc, { 
@@ -97,7 +91,7 @@ export default defineConfig({
     rehypePlugins: [
       rehypeKatex,
       rehypeMark,
-      rehypeOptimizeImages,
+      // ⚠️ 修复3: 已移除 rehypeOptimizeImages
       [rehypeSlug, {
         test: (node) => node.tagName !== 'h1'
       }],
@@ -110,8 +104,9 @@ export default defineConfig({
         }
       }]
     ],
+    // ⚠️ 修复4: 禁用图片尺寸推断
     image: {
-      inferSize: true
+      inferSize: false
     },
     shikiConfig: {
       theme: 'github-dark',
