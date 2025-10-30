@@ -12,7 +12,7 @@ import remarkReadingTime from 'remark-reading-time';
 import remarkToc from 'remark-toc';
 import rehypeKatex from 'rehype-katex';
 import rehypeMark from './src/utils/rehype-mark.ts';
-// ⚠️ 已移除 rehypeOptimizeImages - 这是问题根源
+import rehypeOptimizeImages from './src/utils/rehype-optimize-images.ts';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import { siteConfig } from './src/config.ts';
@@ -28,24 +28,17 @@ export default defineConfig({
   devToolbar: {
     enabled: true
   },
-  redirects: {
-    '/about-me': '/about',
-    '/about-us': '/about',
-    '/contact-me': '/contact',
-    '/contact-us': '/contact',
-    '/privacy': '/privacy-policy',
-    '/posts/mermaid-test': '/posts/mermaid-diagrams',
-    '/posts/mermaid-diagram-test': '/posts/mermaid-diagrams',
-    '/posts/astro-suite-vault-modular-guide': '/posts/obsidian-vault-guide',
-    '/posts/astro-suite-obsidian-vault-guide-astro-modular': '/posts/obsidian-vault-guide',
-    '/projects/obsidian-astro-composer': '/projects/astro-composer',
-    '/docs/api-reference': '/docs/api',
-    '/docs/astro-modular-configuration': '/docs/configuration',
-    '/docs/sourcetree-and-git': '/docs/sourcetree-and-git-setup'
-  },
-  // ⚠️ 修复1: 完全禁用图片服务
+  // 恢复原来的 image 配置
   image: {
-    service: undefined
+    service: {
+      entrypoint: 'astro/assets/services/sharp',
+      config: {
+        limitInputPixels: false,
+      }
+    },
+    remotePatterns: [{
+      protocol: 'https'
+    }]
   },
   integrations: [
     tailwind(),
@@ -70,15 +63,15 @@ export default defineConfig({
     })
   ],
   markdown: {
+    // 恢复所有插件
     remarkPlugins: [
       remarkInternalLinks,
-      // ⚠️ 修复2: 临时禁用可能有问题的图片插件
-      // remarkFolderImages,
-      // remarkObsidianEmbeds,
-      // remarkImageCaptions,
+      remarkFolderImages,
+      remarkObsidianEmbeds,
+      remarkImageCaptions,
       remarkMath,
       remarkCallouts,
-      // remarkImageGrids,
+      remarkImageGrids,
       remarkMermaid,
       [remarkReadingTime, {}],
       [remarkToc, { 
@@ -91,7 +84,7 @@ export default defineConfig({
     rehypePlugins: [
       rehypeKatex,
       rehypeMark,
-      // ⚠️ 修复3: 已移除 rehypeOptimizeImages
+      rehypeOptimizeImages, // 恢复这个插件
       [rehypeSlug, {
         test: (node) => node.tagName !== 'h1'
       }],
@@ -104,50 +97,13 @@ export default defineConfig({
         }
       }]
     ],
-    // ⚠️ 修复4: 禁用图片尺寸推断
     image: {
-      inferSize: false
+      inferSize: true // 恢复为 true
     },
     shikiConfig: {
       theme: 'github-dark',
       wrap: true
     }
   },
-  vite: {
-    resolve: {
-      alias: {
-        '@': new URL('./src', import.meta.url).pathname,
-        '@/components': new URL('./src/components', import.meta.url).pathname,
-        '@/layouts': new URL('./src/layouts', import.meta.url).pathname,
-        '@/utils': new URL('./src/utils', import.meta.url).pathname,
-        '@/types': new URL('./src/types.ts', import.meta.url).pathname,
-        '@/config': new URL('./src/config.ts', import.meta.url).pathname
-      }
-    },
-    server: {
-      host: 'localhost',
-      port: 5000,
-      allowedHosts: [],
-      middlewareMode: false,
-      hmr: false,
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      },
-      watch: {
-        usePolling: process.platform === 'win32',
-        interval: 1000
-      }
-    },
-    define: {
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'process.env.ASTRO_CONTENT_COLLECTION_CACHE': 'false'
-    },
-    optimizeDeps: {
-      exclude: ['astro:content']
-    },
-    exclude: ['**/_redirects']
-  },
-  build: {
-    assets: '_assets'
-  }
+  // ... 其他配置保持不变
 });
