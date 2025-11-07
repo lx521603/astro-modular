@@ -61,6 +61,7 @@ export default defineConfig({
   },
   integrations: [
     tailwind(),
+    react(),
     sitemap(),
     mdx(),
     swup({
