@@ -1,9 +1,9 @@
 <BaseLayout seoData={seoData}>
-  <Fragment slot="head">
-    <!-- Structured Data -->
+  <head>
+    {/* 结构化数据 */}
     <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-    <!-- 预加载关键图片 - 使用与实际 img 标签相同的 URL 以利用缓存 -->
+    {/* 预加载关键图片 - 使用与实际 img 标签相同的 URL 以利用缓存 */}
     {featuredPost && featuredPost.data.image && siteConfig.postOptions.showPostCardCoverImages === 'all' && !featuredPost.data.hideCoverImage && typeof featuredPost.data.image === 'string' && !featuredPost.data.image.startsWith('http') && (
       <link
         rel="preload"
@@ -12,15 +12,15 @@
         fetchpriority="high"
       />
     )}
-  </Fragment>
+  </head>
 
-  <div class="py-8 relative">
+  <main class="py-8 relative">
     <div class="mx-auto px-4 sm:px-6 lg:px-8" style={`max-width: ${siteConfig.layout.contentWidth}`}>
       {onlyBlurbContent ? (
-        <!-- 仅显示简介的首页 -->
+        {/* 仅显示简介的首页 */}
         <article class="bg-primary-50 dark:bg-primary-900 rounded-lg border border-primary-200 dark:border-primary-700 shadow-sm">
           <div class="p-6 rounded-lg">
-            <!-- 页面标题 -->
+            {/* 页面标题 */}
             {homeBlurbContent?.data.title && (
               <header class="mb-4">
                 <h1 class="text-xl font-bold text-primary-900 dark:text-primary-50 mb-6 leading-tight">
@@ -29,7 +29,7 @@
               </header>
             )}
 
-            <!-- 页面内容 -->
+            {/* 页面内容 */}
             <div class="prose dark:prose-dark max-w-none" id="page-content">
               {HomeBlurbContent && <HomeBlurbContent />}
             </div>
@@ -37,14 +37,14 @@
         </article>
       ) : processedPosts.length > 0 ? (
         <>
-          <!-- 首页简介显示在文章上方 -->
+          {/* 首页简介显示在文章上方 */}
           {siteConfig.homeOptions.blurb.placement === 'above' && HomeBlurbContent && (
             <section class="prose prose-sm dark:prose-dark max-w-none mb-16">
               <HomeBlurbContent />
             </section>
           )}
 
-          <!-- 置顶文章 -->
+          {/* 置顶文章 */}
           {siteConfig.homeOptions.featuredPost.enabled && featuredPost && (
             <section class="mb-12">
               <div class="flex items-center justify-between mb-6">
@@ -57,7 +57,7 @@
             </section>
           )}
 
-          <!-- 最近文章预览 -->
+          {/* 最近文章预览 */}
           {siteConfig.homeOptions.recentPosts.enabled && previewPosts.length > 0 && (
             <section class="mb-12">
               {!useSpecialTreatment && (
@@ -93,7 +93,7 @@
             </section>
           )}
 
-          <!-- 精选项目 -->
+          {/* 精选项目 */}
           {siteConfig.homeOptions.projects.enabled && featuredProjects.length > 0 && (
             <section class="mb-12">
               {!useSpecialTreatment && (
@@ -129,7 +129,7 @@
             </section>
           )}
 
-          <!-- 精选文档 -->
+          {/* 精选文档 */}
           {siteConfig.homeOptions.docs.enabled && featuredDocs.length > 0 && (
             <section class="mb-12">
               {!useSpecialTreatment && (
@@ -165,7 +165,7 @@
             </section>
           )}
 
-          <!-- 首页简介显示在文章下方 -->
+          {/* 首页简介显示在文章下方 */}
           {siteConfig.homeOptions.blurb.placement === 'below' && HomeBlurbContent && (
             <section class="prose prose-sm dark:prose-dark max-w-none mt-16">
               <HomeBlurbContent />
@@ -174,7 +174,7 @@
 
         </>
       ) : (
-        <!-- 空状态 -->
+        {/* 空状态 */}
         <section class="text-center py-16">
           <div class="max-w-md mx-auto">
             <Icon name="file-text" class="w-16 h-16 text-primary-400 dark:text-primary-500 mx-auto mb-6" />
