@@ -1,9 +1,148 @@
+---
+import { getCollection, getEntry, render, type CollectionEntry } from 'astro:content';
+import { isValidDate } from '@/utils/markdown';
+import { siteConfig } from '@/config';
+import { generateHomeSEO } from '@/utils/seo';
+import { shouldShowPost, shouldShowContent, sortPostsByDate, processPost } from '@/utils/markdown';
+import { hasProjectCategories } from '@/utils/categories';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PostCard from '@/components/PostCard.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import DocumentationCard from '@/components/DocumentationCard.astro';
+import Icon from '@/components/Icon.astro';
+import { optimizePostImagePath } from '@/utils/images';
+
+// 获取所有文章并过滤可见文章
+const allPosts = await getCollection('posts');
+const isDev = import.meta.env.DEV;
+const visiblePosts = allPosts.filter(post => shouldShowPost(post, isDev));
+const sortedPosts = sortPostsByDate(visiblePosts);
+
+// 处理文章的阅读时间、字数等信息
+const processedPosts = await Promise.all(
+  sortedPosts.map(async (post) => await processPost(post))
+) as any[];
+
+// 获取置顶文章
+let featuredPost = null;
+if (siteConfig.homeOptions.featuredPost.enabled) {
+  if (siteConfig.homeOptions.featuredPost.type === "latest") {
+    featuredPost = processedPosts[0];
+  } else if (siteConfig.homeOptions.featuredPost.type === "featured" && siteConfig.homeOptions.featuredPost.slug) {
+    featuredPost = processedPosts.find(post => post.id === siteConfig.homeOptions.featuredPost.slug) || null;
+  }
+}
+
+// 获取最近文章
+const previewPosts = featuredPost
+  ? processedPosts.slice(1, siteConfig.homeOptions.recentPosts.count + 1)
+  : processedPosts.slice(0, siteConfig.homeOptions.recentPosts.count);
+
+// 获取置顶项目
+let featuredProjects: any[] = [];
+let projectsHaveCategories = false;
+if (siteConfig.homeOptions.projects.enabled && siteConfig.optionalContentTypes.projects) {
+  const allProjects = await getCollection('projects');
+  const visibleProjects = allProjects.filter(project => shouldShowContent(project, isDev));
+
+  projectsHaveCategories = hasProjectCategories(visibleProjects);
+
+  const featuredOnly = visibleProjects.filter(project => project.data.featured);
+
+  if (featuredOnly.length > 0) {
+    featuredProjects = featuredOnly
+      .sort((a, b) => {
+        const dateA = isValidDate(a.data.date) ? a.data.date : new Date(0);
+        const dateB = isValidDate(b.data.date) ? b.data.date : new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, siteConfig.homeOptions.projects.count);
+  } else if (visibleProjects.length > 0) {
+    featuredProjects = visibleProjects
+      .sort((a, b) => {
+        const dateA = isValidDate(a.data.date) ? a.data.date : new Date(0);
+        const dateB = isValidDate(b.data.date) ? b.data.date : new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, siteConfig.homeOptions.projects.count);
+  }
+}
+
+// 获取置顶文档
+let featuredDocs: any[] = [];
+if (siteConfig.homeOptions.docs.enabled && siteConfig.optionalContentTypes.docs) {
+  const allDocs = await getCollection('docs');
+  const visibleDocs = allDocs.filter(doc => shouldShowContent(doc, isDev));
+
+  const featuredOnly = visibleDocs.filter(doc => doc.data.featured);
+
+  if (featuredOnly.length > 0) {
+    featuredDocs = featuredOnly
+      .sort((a, b) => {
+        const dateA = (a.data.lastModified && isValidDate(a.data.lastModified)) ? a.data.lastModified : new Date(0);
+        const dateB = (b.data.lastModified && isValidDate(b.data.lastModified)) ? b.data.lastModified : new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, siteConfig.homeOptions.docs.count);
+  } else if (visibleDocs.length > 0) {
+    featuredDocs = visibleDocs
+      .sort((a, b) => {
+        const dateA = (a.data.lastModified && isValidDate(a.data.lastModified)) ? a.data.lastModified : new Date(0);
+        const dateB = (b.data.lastModified && isValidDate(b.data.lastModified)) ? b.data.lastModified : new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, siteConfig.homeOptions.docs.count);
+  }
+}
+
+// 获取首页简介
+let homeBlurbContent = null;
+let HomeBlurbContent = null;
+
+if (siteConfig.homeOptions.blurb.placement !== 'none') {
+  try {
+    homeBlurbContent = await getEntry('special', 'home');
+    if (homeBlurbContent) {
+      const { Content } = await render(homeBlurbContent);
+      HomeBlurbContent = Content;
+    }
+  } catch (error) {}
+}
+
+// 判断显示的内容类型
+const hasFeaturedPost = siteConfig.homeOptions.featuredPost.enabled && featuredPost;
+const hasRecentPosts = siteConfig.homeOptions.recentPosts.enabled && previewPosts.length > 0;
+const hasProjects = siteConfig.homeOptions.projects.enabled && featuredProjects.length > 0;
+const hasDocs = siteConfig.homeOptions.docs.enabled && featuredDocs.length > 0;
+
+// 是否只显示一个内容类型
+const contentTypesCount = [hasFeaturedPost, hasRecentPosts, hasProjects, hasDocs].filter(Boolean).length;
+const useSpecialTreatment = contentTypesCount === 1;
+
+// 是否仅显示简介
+const onlyBlurbContent = contentTypesCount === 0 && siteConfig.homeOptions.blurb.placement !== 'none' && HomeBlurbContent;
+
+// 生成 SEO 数据
+const seoData = generateHomeSEO(Astro.url.href);
+
+// 结构化数据
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: siteConfig.title,
+  description: siteConfig.description,
+  url: siteConfig.site,
+  author: { '@type': 'Person', name: siteConfig.author },
+  publisher: { '@type': 'Organization', name: siteConfig.title, url: siteConfig.site }
+};
+---
+
 <BaseLayout seoData={seoData}>
-  <head>
+  <Fragment slot="head">
     {/* 结构化数据 */}
     <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-    {/* 预加载关键图片 - 使用与实际 img 标签相同的 URL 以利用缓存 */}
+    {/* 预加载关键图片 */}
     {featuredPost && featuredPost.data.image && siteConfig.postOptions.showPostCardCoverImages === 'all' && !featuredPost.data.hideCoverImage && typeof featuredPost.data.image === 'string' && !featuredPost.data.image.startsWith('http') && (
       <link
         rel="preload"
@@ -12,12 +151,12 @@
         fetchpriority="high"
       />
     )}
-  </head>
+  </Fragment>
 
-  <main class="py-8 relative">
+  <div class="py-8 relative">
     <div class="mx-auto px-4 sm:px-6 lg:px-8" style={`max-width: ${siteConfig.layout.contentWidth}`}>
       {onlyBlurbContent ? (
-        {/* 仅显示简介的首页 */}
+        {/* 仅显示简介 */}
         <article class="bg-primary-50 dark:bg-primary-900 rounded-lg border border-primary-200 dark:border-primary-700 shadow-sm">
           <div class="p-6 rounded-lg">
             {/* 页面标题 */}
@@ -28,7 +167,6 @@
                 </h1>
               </header>
             )}
-
             {/* 页面内容 */}
             <div class="prose dark:prose-dark max-w-none" id="page-content">
               {HomeBlurbContent && <HomeBlurbContent />}
@@ -37,7 +175,7 @@
         </article>
       ) : processedPosts.length > 0 ? (
         <>
-          {/* 首页简介显示在文章上方 */}
+          {/* 首页简介在文章上方 */}
           {siteConfig.homeOptions.blurb.placement === 'above' && HomeBlurbContent && (
             <section class="prose prose-sm dark:prose-dark max-w-none mb-16">
               <HomeBlurbContent />
@@ -52,40 +190,29 @@
                   {siteConfig.homeOptions.featuredPost.type === "latest" ? "最新文章" : "精选文章"}
                 </h2>
               </div>
-
               <PostCard post={featuredPost} featured={true} eager={true} context="featured" />
             </section>
           )}
 
-          {/* 最近文章预览 */}
+          {/* 最近文章 */}
           {siteConfig.homeOptions.recentPosts.enabled && previewPosts.length > 0 && (
             <section class="mb-12">
               {!useSpecialTreatment && (
                 <div class="flex items-center justify-between mb-6">
-                  <h2 class="text-lg font-semibold text-primary-900 dark:text-primary-50">
-                    最近文章
-                  </h2>
-                  <a
-                    href="/posts"
-                    class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors"
-                  >
+                  <h2 class="text-lg font-semibold text-primary-900 dark:text-primary-50">最近文章</h2>
+                  <a href="/posts" class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors">
                     查看所有文章 →
                   </a>
                 </div>
               )}
-
               <div class="space-y-4">
                 {previewPosts.map((post, index) => (
                   <PostCard post={post} eager={featuredPost ? index === 0 : index < 2} context="recent" />
                 ))}
               </div>
-
               {useSpecialTreatment && (
                 <div class="mt-8 text-center">
-                  <a
-                    href="/posts"
-                    class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors"
-                  >
+                  <a href="/posts" class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors">
                     查看所有文章 →
                   </a>
                 </div>
@@ -98,30 +225,20 @@
             <section class="mb-12">
               {!useSpecialTreatment && (
                 <div class="flex items-center justify-between mb-6">
-                  <h2 class="text-lg font-semibold text-primary-900 dark:text-primary-50">
-                    项目
-                  </h2>
-                  <a
-                    href="/projects"
-                    class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors"
-                  >
+                  <h2 class="text-lg font-semibold text-primary-900 dark:text-primary-50">项目</h2>
+                  <a href="/projects" class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors">
                     查看所有项目 →
                   </a>
                 </div>
               )}
-
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {featuredProjects.map((project, index) => (
+                {featuredProjects.map((project) => (
                   <ProjectCard project={project} eager={false} context="home" showCategories={projectsHaveCategories} />
                 ))}
               </div>
-
               {useSpecialTreatment && (
                 <div class="mt-8 text-center">
-                  <a
-                    href="/projects"
-                    class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors"
-                  >
+                  <a href="/projects" class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors">
                     查看所有项目 →
                   </a>
                 </div>
@@ -134,30 +251,20 @@
             <section class="mb-12">
               {!useSpecialTreatment && (
                 <div class="flex items-center justify-between mb-6">
-                  <h2 class="text-lg font-semibold text-primary-900 dark:text-primary-50">
-                    文档
-                  </h2>
-                  <a
-                    href="/docs"
-                    class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors"
-                  >
+                  <h2 class="text-lg font-semibold text-primary-900 dark:text-primary-50">文档</h2>
+                  <a href="/docs" class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors">
                     查看所有文档 →
                   </a>
                 </div>
               )}
-
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {featuredDocs.map((doc, index) => (
                   <DocumentationCard documentation={doc} eager={index === 0} context="home" />
                 ))}
               </div>
-
               {useSpecialTreatment && (
                 <div class="mt-8 text-center">
-                  <a
-                    href="/docs"
-                    class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors"
-                  >
+                  <a href="/docs" class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors">
                     查看所有文档 →
                   </a>
                 </div>
@@ -165,7 +272,7 @@
             </section>
           )}
 
-          {/* 首页简介显示在文章下方 */}
+          {/* 首页简介在文章下方 */}
           {siteConfig.homeOptions.blurb.placement === 'below' && HomeBlurbContent && (
             <section class="prose prose-sm dark:prose-dark max-w-none mt-16">
               <HomeBlurbContent />
@@ -178,12 +285,8 @@
         <section class="text-center py-16">
           <div class="max-w-md mx-auto">
             <Icon name="file-text" class="w-16 h-16 text-primary-400 dark:text-primary-500 mx-auto mb-6" />
-            <h2 class="text-2xl font-semibold text-primary-900 dark:text-primary-50 mb-4">
-              暂无文章
-            </h2>
-            <p class="text-primary-600 dark:text-primary-300 mb-8">
-              博客尚未发布内容，请稍后回来查看！
-            </p>
+            <h2 class="text-2xl font-semibold text-primary-900 dark:text-primary-50 mb-4">暂无文章</h2>
+            <p class="text-primary-600 dark:text-primary-300 mb-8">博客尚未发布内容，请稍后回来查看！</p>
             {isDev && (
               <div class="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
                 <p class="text-sm text-blue-800 dark:text-blue-200">
@@ -194,16 +297,14 @@
           </div>
         </section>
       )}
-
     </div>
-  </main>
+  </div>
 </BaseLayout>
 
 <script>
   // 首页搜索按钮功能
   document.addEventListener('DOMContentLoaded', () => {
     const heroSearchButton = document.getElementById('hero-search-button');
-
     if (heroSearchButton) {
       heroSearchButton.addEventListener('click', () => {
         const event = new CustomEvent('openCommandPalette');
