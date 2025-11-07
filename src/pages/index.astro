@@ -1,169 +1,9 @@
----
-import { getCollection, getEntry, render, type CollectionEntry } from 'astro:content';
-import { isValidDate } from '@/utils/markdown';
-import { siteConfig } from '@/config';
-import { generateHomeSEO } from '@/utils/seo';
-import { shouldShowPost, shouldShowContent, sortPostsByDate, processPost } from '@/utils/markdown';
-import { hasProjectCategories } from '@/utils/categories';
-import BaseLayout from '@/layouts/BaseLayout.astro';
-import PostCard from '@/components/PostCard.astro';
-import ProjectCard from '@/components/ProjectCard.astro';
-import DocumentationCard from '@/components/DocumentationCard.astro';
-import Icon from '@/components/Icon.astro';
-import { optimizePostImagePath } from '@/utils/images';
-
-// Get all posts and filter by visibility
-const allPosts = await getCollection('posts');
-const isDev = import.meta.env.DEV;
-const visiblePosts = allPosts.filter(post => shouldShowPost(post, isDev));
-const sortedPosts = sortPostsByDate(visiblePosts);
-
-// Process posts for reading time and word count
-const processedPosts = await Promise.all(
-  sortedPosts.map(async (post) => await processPost(post))
-) as any[];
-
-// Get featured post based on configuration
-let featuredPost = null;
-if (siteConfig.homeOptions.featuredPost.enabled) {
-  if (siteConfig.homeOptions.featuredPost.type === "latest") {
-    featuredPost = processedPosts[0];
-  } else if (siteConfig.homeOptions.featuredPost.type === "featured" && siteConfig.homeOptions.featuredPost.slug) {
-    // Find the specific post by id (slug config value maps to post.id in v6)
-    featuredPost = processedPosts.find(post => post.id === siteConfig.homeOptions.featuredPost.slug) || null;
-  }
-}
-
-// Get preview posts based on whether featured post is shown
-const previewPosts = featuredPost
-  ? processedPosts.slice(1, siteConfig.homeOptions.recentPosts.count + 1)
-  : processedPosts.slice(0, siteConfig.homeOptions.recentPosts.count);
-
-// Get featured projects if enabled
-let featuredProjects: any[] = [];
-let projectsHaveCategories = false;
-if (siteConfig.homeOptions.projects.enabled && siteConfig.optionalContentTypes.projects) {
-  const allProjects = await getCollection('projects');
-  const visibleProjects = allProjects.filter(project => shouldShowContent(project, isDev));
-
-  // Check if any projects have categories
-  projectsHaveCategories = hasProjectCategories(visibleProjects);
-
-  // First try to get featured projects
-  const featuredOnly = visibleProjects.filter(project => project.data.featured);
-
-  if (featuredOnly.length > 0) {
-    // Show up to configured count of featured projects
-            featuredProjects = featuredOnly
-              .sort((a, b) => {
-                const dateA = isValidDate(a.data.date) ? a.data.date : new Date(0);
-                const dateB = isValidDate(b.data.date) ? b.data.date : new Date(0);
-                return dateB.getTime() - dateA.getTime();
-              })
-              .slice(0, siteConfig.homeOptions.projects.count);
-  } else if (visibleProjects.length > 0) {
-    // Fallback to most recent projects if no featured ones
-    featuredProjects = visibleProjects
-      .sort((a, b) => {
-        const dateA = isValidDate(a.data.date) ? a.data.date : new Date(0);
-        const dateB = isValidDate(b.data.date) ? b.data.date : new Date(0);
-        return dateB.getTime() - dateA.getTime();
-      })
-      .slice(0, siteConfig.homeOptions.projects.count);
-  }
-
-}
-
-// Get featured docs if enabled
-let featuredDocs: any[] = [];
-if (siteConfig.homeOptions.docs.enabled && siteConfig.optionalContentTypes.docs) {
-  const allDocs = await getCollection('docs');
-  const visibleDocs = allDocs.filter(doc => shouldShowContent(doc, isDev));
-
-  // First try to get featured docs
-  const featuredOnly = visibleDocs.filter(doc => doc.data.featured);
-
-  if (featuredOnly.length > 0) {
-    // Show up to configured count of featured docs
-    featuredDocs = featuredOnly
-      .sort((a, b) => {
-        // Use lastModified if available, otherwise use epoch (invisible date for sorting)
-        const dateA = (a.data.lastModified && isValidDate(a.data.lastModified)) ? a.data.lastModified : new Date(0);
-        const dateB = (b.data.lastModified && isValidDate(b.data.lastModified)) ? b.data.lastModified : new Date(0);
-        return dateB.getTime() - dateA.getTime();
-      })
-      .slice(0, siteConfig.homeOptions.docs.count);
-  } else if (visibleDocs.length > 0) {
-    // Fallback to most recent docs if no featured ones
-    featuredDocs = visibleDocs
-      .sort((a, b) => {
-        // Use lastModified if available, otherwise use epoch (invisible date for sorting)
-        const dateA = (a.data.lastModified && isValidDate(a.data.lastModified)) ? a.data.lastModified : new Date(0);
-        const dateB = (b.data.lastModified && isValidDate(b.data.lastModified)) ? b.data.lastModified : new Date(0);
-        return dateB.getTime() - dateA.getTime();
-      })
-      .slice(0, siteConfig.homeOptions.docs.count);
-  }
-}
-
-// Get home blurb content from special collection
-let homeBlurbContent = null;
-let HomeBlurbContent = null;
-
-if (siteConfig.homeOptions.blurb.placement !== 'none') {
-  try {
-    homeBlurbContent = await getEntry('special', 'home');
-    if (homeBlurbContent) {
-      const { Content } = await render(homeBlurbContent);
-      HomeBlurbContent = Content;
-    }
-  } catch (error) {
-  }
-}
-
-// Determine which content types are being displayed
-const hasFeaturedPost = siteConfig.homeOptions.featuredPost.enabled && featuredPost;
-const hasRecentPosts = siteConfig.homeOptions.recentPosts.enabled && previewPosts.length > 0;
-const hasProjects = siteConfig.homeOptions.projects.enabled && featuredProjects.length > 0;
-const hasDocs = siteConfig.homeOptions.docs.enabled && featuredDocs.length > 0;
-
-// Count how many content types are being displayed
-const contentTypesCount = [hasFeaturedPost, hasRecentPosts, hasProjects, hasDocs].filter(Boolean).length;
-
-// Determine if we should use special treatment (only one content type is displayed)
-const useSpecialTreatment = contentTypesCount === 1;
-
-// Determine if only blurb content should be shown (no posts, projects, or docs)
-const onlyBlurbContent = contentTypesCount === 0 && siteConfig.homeOptions.blurb.placement !== 'none' && HomeBlurbContent;
-
-// Generate SEO data for homepage
-const seoData = generateHomeSEO(Astro.url.href);
-
-// Structured data for the website
-const structuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'Blog',
-  name: siteConfig.title,
-  description: siteConfig.description,
-  url: siteConfig.site,
-  author: {
-    '@type': 'Person',
-    name: siteConfig.author
-  },
-  publisher: {
-    '@type': 'Organization',
-    name: siteConfig.title,
-    url: siteConfig.site
-  }
-};
----
-
 <BaseLayout seoData={seoData}>
   <Fragment slot="head">
     <!-- Structured Data -->
     <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-    <!-- Preload critical images - use same URL as actual img tags for caching -->
+    <!-- 预加载关键图片 - 使用与实际 img 标签相同的 URL 以利用缓存 -->
     {featuredPost && featuredPost.data.image && siteConfig.postOptions.showPostCardCoverImages === 'all' && !featuredPost.data.hideCoverImage && typeof featuredPost.data.image === 'string' && !featuredPost.data.image.startsWith('http') && (
       <link
         rel="preload"
@@ -177,10 +17,10 @@ const structuredData = {
   <div class="py-8 relative">
     <div class="mx-auto px-4 sm:px-6 lg:px-8" style={`max-width: ${siteConfig.layout.contentWidth}`}>
       {onlyBlurbContent ? (
-        <!-- Blurb-only homepage with page-like layout -->
+        <!-- 仅显示简介的首页 -->
         <article class="bg-primary-50 dark:bg-primary-900 rounded-lg border border-primary-200 dark:border-primary-700 shadow-sm">
           <div class="p-6 rounded-lg">
-            <!-- Page header -->
+            <!-- 页面标题 -->
             {homeBlurbContent?.data.title && (
               <header class="mb-4">
                 <h1 class="text-xl font-bold text-primary-900 dark:text-primary-50 mb-6 leading-tight">
@@ -189,7 +29,7 @@ const structuredData = {
               </header>
             )}
 
-            <!-- Page content -->
+            <!-- 页面内容 -->
             <div class="prose dark:prose-dark max-w-none" id="page-content">
               {HomeBlurbContent && <HomeBlurbContent />}
             </div>
@@ -197,19 +37,19 @@ const structuredData = {
         </article>
       ) : processedPosts.length > 0 ? (
         <>
-          <!-- Home blurb above posts -->
+          <!-- 首页简介显示在文章上方 -->
           {siteConfig.homeOptions.blurb.placement === 'above' && HomeBlurbContent && (
             <section class="prose prose-sm dark:prose-dark max-w-none mb-16">
               <HomeBlurbContent />
             </section>
           )}
 
-          <!-- Featured post -->
+          <!-- 置顶文章 -->
           {siteConfig.homeOptions.featuredPost.enabled && featuredPost && (
             <section class="mb-12">
               <div class="flex items-center justify-between mb-6">
                 <h2 class="text-lg font-semibold text-primary-900 dark:text-primary-50">
-                  {siteConfig.homeOptions.featuredPost.type === "latest" ? "Latest Post" : "Featured Post"}
+                  {siteConfig.homeOptions.featuredPost.type === "latest" ? "最新文章" : "精选文章"}
                 </h2>
               </div>
 
@@ -217,19 +57,19 @@ const structuredData = {
             </section>
           )}
 
-          <!-- Recent posts preview -->
+          <!-- 最近文章预览 -->
           {siteConfig.homeOptions.recentPosts.enabled && previewPosts.length > 0 && (
             <section class="mb-12">
               {!useSpecialTreatment && (
                 <div class="flex items-center justify-between mb-6">
                   <h2 class="text-lg font-semibold text-primary-900 dark:text-primary-50">
-                    Recent Posts
+                    最近文章
                   </h2>
                   <a
                     href="/posts"
                     class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors"
                   >
-                    View all posts →
+                    查看所有文章 →
                   </a>
                 </div>
               )}
@@ -246,26 +86,26 @@ const structuredData = {
                     href="/posts"
                     class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors"
                   >
-                    View all posts →
+                    查看所有文章 →
                   </a>
                 </div>
               )}
             </section>
           )}
 
-          <!-- Featured Projects -->
+          <!-- 精选项目 -->
           {siteConfig.homeOptions.projects.enabled && featuredProjects.length > 0 && (
             <section class="mb-12">
               {!useSpecialTreatment && (
                 <div class="flex items-center justify-between mb-6">
                   <h2 class="text-lg font-semibold text-primary-900 dark:text-primary-50">
-                    Projects
+                    项目
                   </h2>
                   <a
                     href="/projects"
                     class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors"
                   >
-                    View all projects →
+                    查看所有项目 →
                   </a>
                 </div>
               )}
@@ -282,26 +122,26 @@ const structuredData = {
                     href="/projects"
                     class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors"
                   >
-                    View all projects →
+                    查看所有项目 →
                   </a>
                 </div>
               )}
             </section>
           )}
 
-          <!-- Featured Documentation -->
+          <!-- 精选文档 -->
           {siteConfig.homeOptions.docs.enabled && featuredDocs.length > 0 && (
             <section class="mb-12">
               {!useSpecialTreatment && (
                 <div class="flex items-center justify-between mb-6">
                   <h2 class="text-lg font-semibold text-primary-900 dark:text-primary-50">
-                    Documentation
+                    文档
                   </h2>
                   <a
                     href="/docs"
                     class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors"
                   >
-                    View all docs →
+                    查看所有文档 →
                   </a>
                 </div>
               )}
@@ -318,14 +158,14 @@ const structuredData = {
                     href="/docs"
                     class="text-primary-600 dark:text-primary-300 hover:text-highlight-600 dark:hover:text-highlight-400 font-medium transition-colors"
                   >
-                    View all docs →
+                    查看所有文档 →
                   </a>
                 </div>
               )}
             </section>
           )}
 
-          <!-- Home blurb below posts -->
+          <!-- 首页简介显示在文章下方 -->
           {siteConfig.homeOptions.blurb.placement === 'below' && HomeBlurbContent && (
             <section class="prose prose-sm dark:prose-dark max-w-none mt-16">
               <HomeBlurbContent />
@@ -334,20 +174,20 @@ const structuredData = {
 
         </>
       ) : (
-        <!-- Empty state -->
+        <!-- 空状态 -->
         <section class="text-center py-16">
           <div class="max-w-md mx-auto">
             <Icon name="file-text" class="w-16 h-16 text-primary-400 dark:text-primary-500 mx-auto mb-6" />
             <h2 class="text-2xl font-semibold text-primary-900 dark:text-primary-50 mb-4">
-              No Posts Yet
+              暂无文章
             </h2>
             <p class="text-primary-600 dark:text-primary-300 mb-8">
-              This blog is just getting started. Check back soon for new content!
+              博客尚未发布内容，请稍后回来查看！
             </p>
             {isDev && (
               <div class="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
                 <p class="text-sm text-blue-800 dark:text-blue-200">
-                  <strong>Dev Mode:</strong> Add some posts to the <code>content/posts/</code> directory to see them here.
+                  <strong>开发模式：</strong>请在 <code>content/posts/</code> 目录中添加文章以在此显示。
                 </p>
               </div>
             )}
@@ -360,7 +200,7 @@ const structuredData = {
 </BaseLayout>
 
 <script>
-  // Hero search button functionality
+  // 首页搜索按钮功能
   document.addEventListener('DOMContentLoaded', () => {
     const heroSearchButton = document.getElementById('hero-search-button');
 
@@ -374,7 +214,7 @@ const structuredData = {
 </script>
 
 <style>
-  /* Enhanced homepage styles */
+  /* 首页增强样式 */
   .btn-primary {
     @apply inline-flex items-center px-6 py-3 font-medium rounded-lg transition-all duration-200 hover:shadow-lg transform hover:scale-105;
   }
