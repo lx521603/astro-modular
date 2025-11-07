@@ -1,0 +1,203 @@
+{
+  "main": {
+    "id": "524250eec43d850d",
+    "type": "split",
+    "children": [
+      {
+        "id": "a281292ecaf7e442",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "cd06f8bcdd931826",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "src/content/posts/formatting-reference.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "formatting-reference"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "6c02c1431a9abd4a",
+    "type": "mobile-drawer",
+    "children": [
+      {
+        "id": "d57f9392b7b5ebdb",
+        "type": "leaf",
+        "state": {
+          "type": "file-explorer",
+          "state": {
+            "sortOrder": "alphabetical",
+            "autoReveal": false
+          },
+          "icon": "lucide-folder-closed",
+          "title": "文件列表"
+        }
+      },
+      {
+        "id": "16a9ac250cf51808",
+        "type": "leaf",
+        "state": {
+          "type": "search",
+          "state": {
+            "query": "",
+            "matchingCase": false,
+            "explainSearch": false,
+            "collapseAll": false,
+            "extraContext": false,
+            "sortOrder": "alphabetical"
+          },
+          "icon": "lucide-search",
+          "title": "搜索"
+        }
+      },
+      {
+        "id": "a6cf6c41a848e283",
+        "type": "leaf",
+        "state": {
+          "type": "tag",
+          "state": {
+            "sortOrder": "frequency",
+            "useHierarchy": true,
+            "showSearch": false,
+            "searchQuery": ""
+          },
+          "icon": "lucide-tags",
+          "title": "标签"
+        }
+      },
+      {
+        "id": "241b99da98a368f6",
+        "type": "leaf",
+        "state": {
+          "type": "bookmarks",
+          "state": {},
+          "icon": "lucide-bookmark",
+          "title": "书签"
+        }
+      }
+    ],
+    "currentTab": 0
+  },
+  "right": {
+    "id": "8b150a185f17b5a6",
+    "type": "mobile-drawer",
+    "children": [
+      {
+        "id": "2fb6abac34124ad1",
+        "type": "leaf",
+        "state": {
+          "type": "backlink",
+          "state": {
+            "collapseAll": false,
+            "extraContext": false,
+            "sortOrder": "alphabetical",
+            "showSearch": false,
+            "searchQuery": "",
+            "backlinkCollapsed": false,
+            "unlinkedCollapsed": true
+          },
+          "icon": "links-coming-in",
+          "title": "反向链接"
+        }
+      },
+      {
+        "id": "f944118acbdef0f6",
+        "type": "leaf",
+        "state": {
+          "type": "outgoing-link",
+          "state": {
+            "linksCollapsed": false,
+            "unlinkedCollapsed": true
+          },
+          "icon": "links-going-out",
+          "title": "出链"
+        }
+      },
+      {
+        "id": "0eb5f611ed5d124a",
+        "type": "leaf",
+        "state": {
+          "type": "outline",
+          "state": {
+            "followCursor": false,
+            "showSearch": false,
+            "searchQuery": ""
+          },
+          "icon": "lucide-list",
+          "title": "大纲"
+        }
+      }
+    ],
+    "currentTab": 0
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:创建新数据库": false,
+      "obsidian-git:Open Git source control": false
+    }
+  },
+  "active": "cd06f8bcdd931826",
+  "lastOpenFiles": [
+    "src/content/posts/测试同步.md",
+    "vite.config.mjs",
+    "tsconfig.json",
+    "tailwind.config.mjs",
+    "wrangler.toml",
+    "scripts/generate-deployment-config.js",
+    "scripts/get-version.js",
+    "scripts/check-missing-images.js",
+    "scripts/process-aliases.js",
+    "scripts/generate-graph-data.js",
+    "scripts/sync-images.js",
+    "README.md",
+    "AGENTS.md",
+    "public/pages/attachments/water.png",
+    "public/pages/attachments/water.webp",
+    "public/docs/attachments/obsidian-cover.webp",
+    "public/docs/attachments/astro-modular-configuration.webp",
+    "public/docs/attachments/astro-modular-configuration.png",
+    "public/docs/attachments/obsidian-cover.png",
+    "public/docs/sourcetree-and-git-setup/sourcetree.webp",
+    "public/docs/sourcetree-and-git-setup/sourcetree.png",
+    "public/docs/api-reference/code.png",
+    "public/docs/sourcetree-and-git/sourcetree.png",
+    "src/content/docs/sourcetree-and-git-setup/index.md",
+    "src/content/projects/obsidian-astro-suite/index.md",
+    "src/content/posts/sample-folder-based-post/index.md",
+    "src/themes/custom/README.md",
+    "src/content/pages/about.md",
+    "src/content/pages/contact.md",
+    "src/content/pages/privacy-policy.md",
+    "src/content/pages/thank-you.md",
+    "src/content/special/posts.md",
+    "src/content/special/docs.md",
+    "src/content/special/404.md",
+    "src/content/special/home.md",
+    "src/content/special/projects.md",
+    "src/content/docs/configuration.md",
+    "src/content/docs/api.md",
+    "src/content/docs/installing-obsidian.md",
+    "src/content/projects/astro-composer.md",
+    "src/content/posts/formatting-reference.md",
+    "src/content/posts/obsidian-vault-guide.md",
+    "src/content/posts/obsidian-embeds-demo.md",
+    "src/content/posts/getting-started.md",
+    "未命名.canvas"
+  ]
+}
