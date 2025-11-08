@@ -20,26 +20,26 @@ export interface Props {
 const { post } = Astro.props;
 const { Content, toc, readingTime, wordCount } = post;
 
-// Process Obsidian bracket syntax in image field
+// 处理图片字段中的 Obsidian 方括号语法
 const processedImage = (() => {
   if (!post.data.image) return post.data.image;
 
-  // Handle case where image is an array (unquoted YAML syntax)
+  // 处理图片是数组的情况（未加引号的 YAML 语法）
   let imageValue = post.data.image;
   if (Array.isArray(post.data.image)) {
-    // If it's an array, take the first element
+    // 如果是数组，取第一个元素
     imageValue = post.data.image[0];
   }
 
-  // Ensure imageValue is a string before calling string methods
+  // 在调用字符串方法之前确保 imageValue 是字符串
   if (typeof imageValue !== 'string') {
-    console.warn('PostContent: imageValue is not a string:', imageValue);
+    console.warn('PostContent: imageValue 不是字符串:', imageValue);
     return imageValue;
   }
 
-  // Check if it's Obsidian double bracket syntax
+  // 检查是否是 Obsidian 双括号语法
   if (imageValue.startsWith('[[') && imageValue.endsWith(']]')) {
-    // Extract the content inside the double brackets
+    // 提取双括号内的内容
     return imageValue.slice(2, -2);
   }
 
@@ -49,9 +49,9 @@ const processedImage = (() => {
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-    <!-- Main content -->
+    <!-- 主要内容 -->
     <div class="lg:col-span-8 xl:col-span-9">
-      <!-- Article header -->
+      <!-- 文章页眉 -->
       <header class="mb-8">
         <h1 class="text-3xl sm:text-4xl font-bold text-primary-900 dark:text-primary-50 mb-6 leading-tight">
           {post.data.title}
@@ -83,8 +83,8 @@ const processedImage = (() => {
               <span class="hidden sm:inline">•</span>
               <span class="sm:hidden">•</span>
               <span class="min-w-0">
-                <span class="hidden sm:inline">{wordCount.toLocaleString()} words</span>
-                <span class="sm:hidden">{wordCount.toLocaleString()} words</span>
+                <span class="hidden sm:inline">{wordCount.toLocaleString()} 字</span>
+                <span class="sm:hidden">{wordCount.toLocaleString()} 字</span>
               </span>
             </>
           )}
@@ -107,65 +107,65 @@ const processedImage = (() => {
           <div class="aspect-video overflow-hidden rounded-xl mb-8">
             <ImageWrapper
               src={(() => {
-                // Clean the image path by removing Obsidian brackets
+                // 通过移除 Obsidian 括号来清理图片路径
                 let cleanImagePath = processedImage;
                 if (!cleanImagePath || typeof cleanImagePath !== 'string') return '';
                 if (cleanImagePath.startsWith('[[') && cleanImagePath.endsWith(']]')) {
                   cleanImagePath = cleanImagePath.slice(2, -2);
                 }
                 
-                // Handle external URLs
+                // 处理外部 URL
                 if (cleanImagePath.startsWith('http')) {
                   return cleanImagePath;
                 }
                 
-                // Detect folder-based vs file-based: if image path starts with 'attachments/',
-                // it's a single-file post (shared attachments folder)
+                // 检测基于文件夹与基于文件：如果图片路径以 'attachments/' 开头，
+                // 则是单文件文章（共享附件文件夹）
                 const isFileBased = cleanImagePath.startsWith('attachments/');
                 
                 if (isFileBased) {
-                  // Single-file post - remove attachments/ prefix
+                  // 单文件文章 - 移除 attachments/ 前缀
                   cleanImagePath = cleanImagePath.replace('attachments/', '');
                 } else {
-                  // Folder-based post - sync script copies images to post folder root
-                  // Remove 'images/' or 'attachments/' prefixes if present (sync script removes them)
+                  // 基于文件夹的文章 - 同步脚本将图片复制到文章文件夹根目录
+                  // 如果存在则移除 'images/' 或 'attachments/' 前缀（同步脚本会移除它们）
                   if (cleanImagePath.startsWith('images/') || cleanImagePath.startsWith('attachments/')) {
                     cleanImagePath = cleanImagePath.replace(/^(images|attachments)\//, '');
                   }
                 }
                 
-                // Convert to WebP if applicable (sync-images.js creates WebP versions)
+                // 如果适用则转换为 WebP（sync-images.js 会创建 WebP 版本）
                 return getOptimizedFormat(cleanImagePath);
               })()}
               basePath={(() => {
-                // 1. External URLs - no basePath needed
+                // 1. 外部 URL - 不需要 basePath
                 if (typeof processedImage === 'string' && processedImage.startsWith('http')) {
                   return '';
                 }
 
-                // 2. Clean the image path to check for attachments/ prefix
+                // 2. 清理图片路径以检查 attachments/ 前缀
                 let cleanImagePath = processedImage;
                 if (typeof cleanImagePath === 'string' && cleanImagePath.startsWith('[[') && cleanImagePath.endsWith(']]')) {
                   cleanImagePath = cleanImagePath.slice(2, -2);
                 }
 
-                // 3. Detect folder-based vs file-based: if image path starts with 'attachments/',
-                // it's a single-file post (shared attachments folder)
+                // 3. 检测基于文件夹与基于文件：如果图片路径以 'attachments/' 开头，
+                // 则是单文件文章（共享附件文件夹）
                 if (typeof cleanImagePath === 'string' && cleanImagePath.startsWith('attachments/')) {
-                  // Single-file post with image in attachments folder
+                  // 图片在附件文件夹中的单文件文章
                   return '/posts/attachments/';
                 }
 
-                // 4. Folder-based post - sync script copies images to post folder root
-                // Safety check: ensure post.id exists before using it
+                // 4. 基于文件夹的文章 - 同步脚本将图片复制到文章文件夹根目录
+                // 安全检查：在使用 post.id 之前确保它存在
                 if (post.id) {
                   return `/posts/${post.id}/`;
                 }
 
-                // Fallback to attachments directory if post.id is undefined
+                // 如果 post.id 未定义，回退到附件目录
                 return '/posts/attachments/';
               })()}
-              alt={post.data.imageAlt || `Image in post: ${post.data.title}`}
+              alt={post.data.imageAlt || `文章中的图片: ${post.data.title}`}
               class="w-full h-full"
               width={1200}
               height={675}
@@ -179,28 +179,28 @@ const processedImage = (() => {
         )}
       </header>
 
-      <!-- Article content -->
+      <!-- 文章内容 -->
       <div class="prose dark:prose-dark max-w-none table-responsive">
         <Content />
       </div>
     </div>
 
-    <!-- Sidebar -->
+    <!-- 侧边栏 -->
     <div class="lg:col-span-4 xl:col-span-3">
       <div class="sticky top-24 space-y-6">
-        <!-- Table of Contents -->
+        <!-- 目录 -->
         {siteConfig.tableOfContents.enabled && toc && toc.length > 0 && (
           <TableOfContents headings={toc} />
         )}
 
-        <!-- Post meta info -->
+        <!-- 文章元信息 -->
         <div class="p-6 bg-primary-50 dark:bg-primary-800/50 rounded-xl">
           <h3 class="font-semibold text-primary-900 dark:text-primary-50 mb-4">
-            Post Information
+            文章信息
           </h3>
           <div class="space-y-3 text-sm">
             <div class="flex justify-between">
-              <span class="text-primary-600 dark:text-primary-300">Published</span>
+              <span class="text-primary-600 dark:text-primary-300">发布时间</span>
               <span class="text-primary-900 dark:text-primary-50">
                 {formatDate(post.data.date)}
               </span>
@@ -208,21 +208,21 @@ const processedImage = (() => {
 
             {readingTime && (
               <div class="flex justify-between">
-                <span class="text-primary-600 dark:text-primary-300">Reading time</span>
+                <span class="text-primary-600 dark:text-primary-300">阅读时间</span>
                 <span class="text-primary-900 dark:text-primary-50">{readingTime.text}</span>
               </div>
             )}
 
             {wordCount && (
               <div class="flex justify-between">
-                <span class="text-primary-600 dark:text-primary-300">Word count</span>
+                <span class="text-primary-600 dark:text-primary-300">字数统计</span>
                 <span class="text-primary-900 dark:text-primary-50">{wordCount.toLocaleString()}</span>
               </div>
             )}
 
             {post.data.targetKeyword && (
               <div class="flex justify-between">
-                <span class="text-primary-600 dark:text-primary-300">Target keyword</span>
+                <span class="text-primary-600 dark:text-primary-300">目标关键词</span>
                 <span class="text-primary-900 dark:text-primary-50 text-right">{post.data.targetKeyword}</span>
               </div>
             )}
@@ -234,7 +234,7 @@ const processedImage = (() => {
 </div>
 
 <script>
-  // Wrap tables in responsive containers for better mobile experience
+  // 将表格包装在响应式容器中，以获得更好的移动端体验
   document.addEventListener('DOMContentLoaded', function() {
     const tables = document.querySelectorAll('.prose table');
     tables.forEach(table => {
@@ -247,20 +247,20 @@ const processedImage = (() => {
         }
         wrapper.appendChild(table);
 
-        // Reset table margin since wrapper handles it
+        // 重置表格边距，因为包装器会处理它
         (table as HTMLElement).style.margin = '0';
       }
     });
   });
 
-  // Initialize anchor link detection
+  // 初始化锚点链接检测
   document.addEventListener('DOMContentLoaded', () => {
-    // Anchor links are automatically handled by the click event listener below
+    // 锚点链接由下面的点击事件监听器自动处理
   });
 
-  // Handle heading links with smooth scrolling (outside DOMContentLoaded)
+  // 处理带平滑滚动的标题链接（在 DOMContentLoaded 外部）
   document.addEventListener('click', (e) => {
-    // Check if clicked element is an anchor link
+    // 检查点击的元素是否是锚点链接
     const target = e.target as HTMLElement;
     if (target && target.tagName === 'A' && target.classList.contains('anchor-link')) {
       const href = target.getAttribute('href');
@@ -271,14 +271,14 @@ const processedImage = (() => {
         if (targetElement) {
           e.preventDefault();
 
-          // Update URL
+          // 更新 URL
           history.pushState(null, '', href);
 
-          // Custom smooth scroll implementation
-          const targetPosition = (targetElement as HTMLElement).offsetTop - 100; // Account for header
+          // 自定义平滑滚动实现
+          const targetPosition = (targetElement as HTMLElement).offsetTop - 100; // 考虑页眉高度
           const startPosition = window.pageYOffset;
           const distance = targetPosition - startPosition;
-          const duration = 800; // 800ms duration
+          const duration = 800; // 800ms 持续时间
           let start: number | null = null;
 
           function step(timestamp: number) {
@@ -286,7 +286,7 @@ const processedImage = (() => {
             const progress = timestamp - start;
             const percentage = Math.min(progress / duration, 1);
 
-            // Easing function (ease-in-out)
+            // 缓动函数（ease-in-out）
             const easeInOut = percentage < 0.5
               ? 2 * percentage * percentage
               : 1 - Math.pow(-2 * percentage + 2, 2) / 2;
