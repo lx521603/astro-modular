@@ -11,21 +11,21 @@ import Pagination from '@/components/Pagination.astro';
 import Icon from '@/components/Icon.astro';
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // Get all posts
+  // 获取所有文章
   const allPosts = await getCollection('posts');
 
-  // Filter posts based on environment
+  // 根据环境过滤文章
   const isDev = import.meta.env.DEV;
   const visiblePosts = allPosts.filter(post => shouldShowPost(post, isDev));
 
-  // Sort posts by date
+  // 按日期排序文章
   const sortedPosts = sortPostsByDate(visiblePosts);
 
-  // Calculate total pages
+  // 计算总页数
   const postsPerPage = siteConfig.postOptions.postsPerPage;
   const totalPages = Math.ceil(sortedPosts.length / postsPerPage);
 
-  // Generate paths for each page (starting from page 2)
+  // 为每一页生成路径（从第2页开始）
   const paths = [];
   for (let page = 2; page <= totalPages; page++) {
     paths.push({
@@ -51,30 +51,30 @@ export interface Props {
 
 const { posts, currentPage, totalPages, postsPerPage } = Astro.props;
 
-// Get query parameters
+// 获取查询参数
 const url = new URL(Astro.request.url);
 const selectedTag = url.searchParams.get('tag');
 
-// Filter by tag if specified
+// 如果指定了标签，则按标签过滤
 const filteredPosts = selectedTag
   ? posts.filter(post => post.data.tags?.includes(selectedTag))
   : posts;
 
-// Calculate pagination for current page
+// 计算当前页的分页
 const startIndex = (currentPage - 1) * postsPerPage;
 const endIndex = Math.min(startIndex + postsPerPage, filteredPosts.length);
 const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
 
-// Extract all unique tags
+// 提取所有唯一标签
 const allTags = extractTags(posts);
 
-// Generate SEO data
+// 生成 SEO 数据
 const pageTitle = selectedTag
-  ? `Posts tagged "${selectedTag}" - Page ${currentPage}`
-  : `All Posts - Page ${currentPage}`;
+  ? `标签为 "${selectedTag}" 的文章 - 第 ${currentPage} 页`
+  : `所有文章 - 第 ${currentPage} 页`;
 const pageDescription = selectedTag
-  ? `Page ${currentPage} of posts tagged with "${selectedTag}"`
-  : `Page ${currentPage} of all posts on ${siteConfig.title}`;
+  ? `第 ${currentPage} 页的标签为 "${selectedTag}" 的文章`
+  : `第 ${currentPage} 页的 ${siteConfig.title} 上的所有文章`;
 
 const seoData = {
   title: `${pageTitle} | ${siteConfig.title}`,
@@ -83,7 +83,7 @@ const seoData = {
   ogType: 'website' as const
 };
 
-// Pagination info
+// 分页信息
 const pagination = {
   currentPage,
   totalPages,
@@ -97,46 +97,46 @@ const pagination = {
 <BaseLayout seoData={seoData}>
   <div class="py-8 relative">
     <div class="mx-auto px-4 sm:px-6 lg:px-8 mb-12" style={`max-width: ${siteConfig.layout.contentWidth}`}>
-      <!-- Header -->
+      <!-- 页眉 -->
       <header class="mb-8">
         <div class="flex items-start justify-between mb-3">
           <h1 class="text-lg font-bold text-primary-900 dark:text-primary-50">
             {selectedTag ? (
-              <>Posts tagged "{selectedTag}"</>
+              <>标签为 "{selectedTag}" 的文章</>
             ) : (
-              <>All Posts</>
+              <>所有文章</>
             )}
           </h1>
           <div class="flex items-center space-x-2">
             <a
               href="/rss.xml"
               class="inline-flex items-center px-3 py-2 text-sm font-medium text-highlight-600 dark:text-highlight-400 bg-highlight-50 dark:bg-highlight-900/20 rounded-lg border border-highlight-200 dark:border-highlight-700 hover:bg-highlight-100 dark:hover:bg-highlight-900/40 hover:text-highlight-700 dark:hover:text-highlight-300 transition-all duration-200"
-              title="Subscribe to RSS feed"
+              title="订阅 RSS 源"
               data-no-swup
             >
               <Icon name="rss" class="w-4 h-4 mr-1.5" />
-              RSS Feed
+              RSS 源
             </a>
             <a
               href="/feed.xml"
               class="inline-flex items-center px-3 py-2 text-sm font-medium text-highlight-600 dark:text-highlight-400 bg-highlight-50 dark:bg-highlight-900/20 rounded-lg border border-highlight-200 dark:border-highlight-700 hover:bg-highlight-100 dark:hover:bg-highlight-900/40 hover:text-highlight-700 dark:hover:text-highlight-300 transition-all duration-200"
-              title="Subscribe to Atom feed"
+              title="订阅 Atom 源"
               data-no-swup
             >
               <Icon name="atom" class="w-4 h-4 mr-1.5" />
-              Atom Feed
+              Atom 源
             </a>
           </div>
         </div>
         <p class="text-base text-primary-600 dark:text-primary-300">
-          Page {currentPage} of {totalPages} • <strong>{filteredPosts.length}</strong>
+          第 {currentPage} 页，共 {totalPages} 页 • <strong>{filteredPosts.length}</strong>
           {selectedTag ? (
-            <>posts tagged with
+            <>篇标签为
             <span class="inline-flex items-center px-2 py-1 bg-highlight-100 dark:bg-highlight-900/30 text-highlight-800 dark:text-highlight-200 rounded text-sm font-medium ml-1">
               #{selectedTag}
-            </span></>
+            </span>的文章</>
           ) : (
-            <>total posts</>
+            <>篇文章总数</>
           )}
         </p>
 
@@ -146,43 +146,43 @@ const pagination = {
             class="inline-flex items-center text-sm text-primary-600 dark:text-primary-300 hover:text-primary-800 dark:hover:text-primary-200 transition-colors"
           >
             <Icon name="arrow-left" class="w-4 h-4 mr-1" />
-            Show all posts
+            显示所有文章
           </a>
         </div>
       </header>
 
       <div class="relative">
-        <!-- Main content -->
+        <!-- 主要内容 -->
         <div class="max-w-none">
           {paginatedPosts.length > 0 ? (
             <>
-              <!-- Posts list -->
+              <!-- 文章列表 -->
               <div class="space-y-6 mb-12">
                 {paginatedPosts.map((post, index) => (
                   <PostCard post={post} eager={index < 2} context="posts" />
                 ))}
               </div>
 
-              <!-- Pagination -->
+              <!-- 分页 -->
               <Pagination pagination={pagination} baseUrl="/posts" />
             </>
           ) : (
-            <!-- No posts found -->
+            <!-- 未找到文章 -->
             <div class="text-center py-16">
               <Icon name="search-x" class="w-16 h-16 text-primary-400 dark:text-primary-500 mx-auto mb-6" />
               <h2 class="text-2xl font-semibold text-primary-900 dark:text-primary-50 mb-4">
-                No posts found on this page
+                此页面未找到文章
               </h2>
               <p class="text-primary-600 dark:text-primary-300 mb-8">
-                Try going back to an earlier page or removing filters.
+                请尝试返回上一页或移除筛选条件。
               </p>
               <div class="space-x-4">
                 <a href="/posts" class="btn-secondary">
-                  View All Posts
+                  查看所有文章
                 </a>
                 {currentPage > 1 && (
                   <a href={pagination.prevUrl} class="btn-outline">
-                    Previous Page
+                    上一页
                   </a>
                 )}
               </div>
@@ -190,18 +190,18 @@ const pagination = {
           )}
         </div>
 
-        <!-- Mobile sidebar - appears below content on mobile/tablet -->
+        <!-- 移动端侧边栏 - 在手机/平板设备上显示在内容下方 -->
         <div class="xl:hidden mt-12 space-y-6">
-          <!-- Tags -->
+          <!-- 标签 -->
           {siteConfig.postOptions.tags && allTags.length > 0 && (
             <Tags tags={allTags} currentTag={selectedTag} />
           )}
         </div>
 
-        <!-- Desktop sidebar - floats to the right of the content container -->
+        <!-- 桌面端侧边栏 - 浮动在内容容器的右侧 -->
         <div class="hidden xl:block absolute top-0 left-full ml-8 w-64">
           <div class="sticky top-24 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto pb-6">
-            <!-- Tags -->
+            <!-- 标签 -->
             {siteConfig.postOptions.tags && allTags.length > 0 && (
               <Tags tags={allTags} currentTag={selectedTag} />
             )}
