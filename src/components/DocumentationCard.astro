@@ -14,31 +14,31 @@ interface Props {
 
 const { documentation, featured = false, eager = false, context = 'docs' } = Astro.props;
 
-// Get excerpt from markdown processing
+// 从 Markdown 处理中获取摘要
 const { excerpt } = processMarkdown(documentation.body);
 
 const { title, description: rawDescription, lastModified, image: rawImage, imageAlt, category, version } = documentation.data;
 
-// Process Obsidian bracket syntax in image field (copy from PostCard)
+// 处理图片字段中的 Obsidian 方括号语法（从 PostCard 复制）
 const image = (() => {
   if (!rawImage) return rawImage;
 
-  // Handle case where rawImage is an array (unquoted YAML syntax)
+  // 处理 rawImage 是数组的情况（未加引号的 YAML 语法）
   let imageValue = rawImage;
   if (Array.isArray(rawImage)) {
-    // If it's an array, take the first element
+    // 如果是数组，取第一个元素
     imageValue = rawImage[0];
   }
 
-  // Ensure imageValue is a string before calling string methods
+  // 在调用字符串方法之前确保 imageValue 是字符串
   if (typeof imageValue !== 'string') {
-    console.warn('DocumentationCard: imageValue is not a string:', imageValue);
+    console.warn('DocumentationCard: imageValue 不是字符串:', imageValue);
     return imageValue;
   }
 
-  // Check if it's Obsidian double bracket syntax
+  // 检查是否是 Obsidian 双括号语法
   if (imageValue.startsWith('[[') && imageValue.endsWith(']]')) {
-    // Extract the content inside the double brackets
+    // 提取双括号内的内容
     return imageValue.slice(2, -2);
   }
 
@@ -47,17 +47,17 @@ const image = (() => {
 
 const description = rawDescription || excerpt;
 
-// Determine if we should show the cover image
-// Documentation should always show images when available (not controlled by postOptions)
+// 确定是否应显示封面图片
+// 文档在有图片时应始终显示图片（不受 postOptions 控制）
 const shouldShowCoverImage = true;
 
-// Hide images for docs on homepage for cleaner look
+// 在首页隐藏文档图片以获得更简洁的外观
 const showCoverImage = shouldShowCoverImage && image && context !== 'home';
 ---
 
 <div class="group relative bg-white dark:bg-primary-800 rounded-lg border border-primary-200 dark:border-primary-700 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-  <a href={`/docs/${documentation.id}`} class="block" aria-label={`View documentation: ${title}`}>
-    <!-- Header with icon and version -->
+  <a href={`/docs/${documentation.id}`} class="block" aria-label={`查看文档: ${title}`}>
+    <!-- 带有图标和版本的页眉 -->
     <div class="flex items-center justify-between p-4 pb-2">
       <Icon name="book-text" class="w-4 h-4 text-primary-500 dark:text-primary-400" />
       {version && (
@@ -67,26 +67,26 @@ const showCoverImage = shouldShowCoverImage && image && context !== 'home';
       )}
     </div>
 
-    <!-- Cover Image (if exists) -->
+    <!-- 封面图片（如果存在） -->
     {image && showCoverImage && (
       <div class="px-4 pb-2">
         <div class="relative overflow-hidden rounded-md">
           <ImageWrapper
             src={(() => {
-              // Clean the image path by removing Obsidian brackets
-              // Remove Obsidian brackets to get the actual image path
+              // 通过移除 Obsidian 括号来清理图片路径
+              // 移除 Obsidian 括号以获取实际的图片路径
               let cleanImagePath = image;
               if (typeof cleanImagePath === 'string' && cleanImagePath.startsWith('[[') && cleanImagePath.endsWith(']]')) {
                 cleanImagePath = cleanImagePath.slice(2, -2);
               }
 
-              // Remove Obsidian subfolder prefixes (images/, attachments/)
+              // 移除 Obsidian 子文件夹前缀（images/, attachments/）
               if (typeof cleanImagePath === 'string') {
-                // Remove images/ prefix if present (Obsidian subfolder setting)
+                // 如果存在则移除 images/ 前缀（Obsidian 子文件夹设置）
                 if (cleanImagePath.startsWith('images/')) {
                   return cleanImagePath.replace('images/', '');
                 }
-                // Remove attachments/ prefix - basePath will add it back
+                // 移除 attachments/ 前缀 - basePath 会重新添加它
                 if (cleanImagePath.startsWith('attachments/')) {
                   return cleanImagePath.replace('attachments/', '');
                 }
@@ -95,35 +95,35 @@ const showCoverImage = shouldShowCoverImage && image && context !== 'home';
               return cleanImagePath || '';
             })()}
             basePath={(() => {
-              // 1. External URLs - no basePath needed
+              // 1. 外部 URL - 不需要 basePath
               if (typeof image === 'string' && image.startsWith('http')) {
                 return '';
               }
 
-              // 2. Clean the image path to check for attachments/ prefix
+              // 2. 清理图片路径以检查 attachments/ 前缀
               let cleanImagePath = image;
               if (typeof cleanImagePath === 'string' && cleanImagePath.startsWith('[[') && cleanImagePath.endsWith(']]')) {
                 cleanImagePath = cleanImagePath.slice(2, -2);
               }
 
-              // 3. Detect folder-based vs file-based: if image path starts with 'attachments/',
-              // it's a single-file doc (shared attachments folder)
+              // 3. 检测基于文件夹与基于文件：如果图片路径以 'attachments/' 开头，
+              // 则是单文件文档（共享附件文件夹）
               if (typeof cleanImagePath === 'string' && cleanImagePath.startsWith('attachments/')) {
-                // Single-file doc with image in attachments folder
-                // The sync script copies these to /docs/attachments/
+                // 图片在附件文件夹中的单文件文档
+                // 同步脚本将这些复制到 /docs/attachments/
                 return "/docs/attachments/";
               }
 
-              // 4. Folder-based doc - sync script copies images to doc folder root
-              // Safety check: ensure documentation.id exists before using it
+              // 4. 基于文件夹的文档 - 同步脚本将图片复制到文档文件夹根目录
+              // 安全检查：在使用 documentation.id 之前确保它存在
               if (documentation.id) {
                 return `/docs/${documentation.id}/`;
               } else {
-                // Fallback to attachments directory if documentation.id is undefined
+                // 如果 documentation.id 未定义，回退到附件目录
                 return '/docs/attachments/';
               }
             })()}
-            alt={imageAlt || `Cover image for documentation: ${title}`}
+            alt={imageAlt || `文档封面图片: ${title}`}
             width={400}
             height={200}
             loading={eager ? 'eager' : 'lazy'}
@@ -134,26 +134,26 @@ const showCoverImage = shouldShowCoverImage && image && context !== 'home';
       </div>
     )}
 
-    <!-- Content -->
+    <!-- 内容 -->
     <div class="p-4 pt-2">
-      <!-- Title -->
+      <!-- 标题 -->
       <h3 class="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2 group-hover:text-highlight-600 dark:group-hover:text-highlight-400 transition-colors line-clamp-2">
         {title}
       </h3>
 
-      <!-- Description -->
+      <!-- 描述 -->
       {description && (
         <p class="text-sm text-primary-600 dark:text-primary-300 mb-3 line-clamp-3">
           {description}
         </p>
       )}
 
-      <!-- Footer -->
+      <!-- 页脚 -->
       {lastModified && (
         <div class="pt-2 border-t border-primary-200 dark:border-primary-700">
           {isValidDate(lastModified) && (
             <time datetime={lastModified.toISOString()} class="text-xs text-primary-500 dark:text-primary-400">
-              Updated {lastModified.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              更新于 {lastModified.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
             </time>
           )}
         </div>
