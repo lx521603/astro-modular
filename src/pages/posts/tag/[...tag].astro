@@ -13,18 +13,18 @@ export const getStaticPaths: GetStaticPaths = async () => {
   const isDev = import.meta.env.DEV;
   
   try {
-    // Get all posts
+    // 获取所有文章
     const allPosts = await getCollection('posts');
     const visiblePosts = allPosts.filter(post => shouldShowPost(post, isDev));
     const sortedPosts = sortPostsByDate(visiblePosts);
 
-    // Extract all unique tags with error handling
+    // 提取所有唯一标签（包含错误处理）
     const allTags = extractTags(sortedPosts);
 
     if (isDev && allTags.length === 0) {
     }
 
-    // Generate paths for each tag
+    // 为每个标签生成路径
     return allTags.map(tag => ({
       params: { tag: tag },
       props: { tag, allPosts: sortedPosts, allTags }
@@ -43,23 +43,23 @@ const { tag, allPosts, allTags } = Astro.props as {
 };
 const isDev = import.meta.env.DEV;
 
-// Validate tag parameter
+// 验证标签参数
 if (!tag || typeof tag !== 'string') {
   if (isDev) {
   }
-  // Return 404 or redirect in production, show error in dev
+  // 在生产环境中返回404或重定向，在开发环境中显示错误
   if (!isDev) {
     return Astro.redirect('/404');
   }
 }
 
-// Filter posts by the current tag with error handling
+// 按当前标签过滤文章（包含错误处理）
 let filteredPosts: any[] = [];
 try {
   filteredPosts = allPosts.filter((post: any) => {
     if (!post.data.tags) return false;
     
-    // Handle both string and array tags
+    // 处理字符串和数组类型的标签
     const postTags = Array.isArray(post.data.tags) ? post.data.tags : [post.data.tags];
     return postTags.some((postTag: any) => 
       postTag && typeof postTag === 'string' && postTag.trim() === tag.trim()
@@ -71,18 +71,18 @@ try {
   filteredPosts = [];
 }
 
-// Pagination
+// 分页设置
 const postsPerPage = siteConfig.postOptions.postsPerPage;
 const totalPosts = filteredPosts.length;
 const totalPages = Math.ceil(totalPosts / postsPerPage);
-const currentPage = 1; // This is the first page
+const currentPage = 1; // 这是第一页
 const startIndex = 0;
 const endIndex = Math.min(postsPerPage, totalPosts);
 const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
 
-// Generate SEO data
-const pageTitle = `Posts tagged "${tag}"`;
-const pageDescription = `All posts tagged with "${tag}"`;
+// 生成 SEO 数据
+const pageTitle = `标签为 "${tag}" 的文章`;
+const pageDescription = `所有标签为 "${tag}" 的文章`;
 
 const seoData = {
   title: `${pageTitle} | ${siteConfig.title}`,
@@ -91,7 +91,7 @@ const seoData = {
   ogType: 'website' as const
 };
 
-// Pagination info
+// 分页信息
 const baseUrl = `/posts/tag/${encodeURIComponent(tag)}`;
 const pagination = {
   currentPage,
@@ -106,7 +106,7 @@ const pagination = {
 <BaseLayout seoData={seoData}>
   <div class="py-8 relative">
     <div class="mx-auto px-4 sm:px-6 lg:px-8 mb-12" style={`max-width: ${siteConfig.layout.contentWidth}`}>
-      <!-- Header -->
+      <!-- 页眉 -->
       <header class="mb-8">
         <div class="flex items-start justify-between mb-3">
           <h1 class="text-lg font-bold text-primary-900 dark:text-primary-50">
@@ -116,28 +116,28 @@ const pagination = {
             <a 
               href="/rss.xml"
               class="inline-flex items-center px-3 py-2 text-sm font-medium text-highlight-600 dark:text-highlight-400 bg-highlight-50 dark:bg-highlight-900/20 rounded-lg border border-highlight-200 dark:border-highlight-700 hover:bg-highlight-100 dark:hover:bg-highlight-900/40 hover:text-highlight-700 dark:hover:text-highlight-300 transition-all duration-200"
-              title="Subscribe to RSS feed"
+              title="订阅 RSS 源"
               data-no-swup
             >
               <Icon name="rss" class="w-4 h-4 mr-1.5" />
-              RSS Feed
+              RSS 源
             </a>
             <a 
               href="/feed.xml"
               class="inline-flex items-center px-3 py-2 text-sm font-medium text-highlight-600 dark:text-highlight-400 bg-highlight-50 dark:bg-highlight-900/20 rounded-lg border border-highlight-200 dark:border-highlight-700 hover:bg-highlight-100 dark:hover:bg-highlight-900/40 hover:text-highlight-700 dark:hover:text-highlight-300 transition-all duration-200"
-              title="Subscribe to Atom feed"
+              title="订阅 Atom 源"
               data-no-swup
             >
               <Icon name="atom" class="w-4 h-4 mr-1.5" />
-              Atom Feed
+              Atom 源
             </a>
           </div>
         </div>
         <p class="text-base text-primary-600 dark:text-primary-300">
-          Showing <strong>{filteredPosts.length}</strong> posts tagged with 
+          显示 <strong>{filteredPosts.length}</strong> 篇标签为 
           <span class="inline-flex items-center px-2 py-1 bg-highlight-100 dark:bg-highlight-900/30 text-highlight-800 dark:text-highlight-200 rounded text-sm font-medium ml-1">
             #{tag}
-          </span>
+          </span> 的文章
         </p>
 
         <div class="mt-4">
@@ -146,53 +146,53 @@ const pagination = {
             class="inline-flex items-center text-sm text-primary-600 dark:text-primary-300 hover:text-primary-800 dark:hover:text-primary-200 transition-colors"
           >
             <Icon name="arrow-left" class="w-4 h-4 mr-1" />
-            Show all posts
+            显示所有文章
           </a>
         </div>
       </header>
 
       <div class="relative">
-        <!-- Main content -->
+        <!-- 主要内容 -->
         <div class="max-w-none">
           {paginatedPosts.length > 0 ? (
             <>
-              <!-- Posts list -->
+              <!-- 文章列表 -->
               <div class="space-y-6 mb-12">
                 {paginatedPosts.map((post, index) => (
                   <PostCard post={post} context="tags" eager={index < 2} />
                 ))}
               </div>
 
-              <!-- Pagination -->
+              <!-- 分页 -->
               <Pagination pagination={pagination} baseUrl={baseUrl} />
             </>
           ) : (
-            <!-- No posts for selected tag -->
+            <!-- 没有找到对应标签的文章 -->
             <div class="text-center py-16">
               <Icon name="tag" class="w-16 h-16 text-primary-400 dark:text-primary-500 mx-auto mb-6" />
               <h2 class="text-2xl font-semibold text-primary-900 dark:text-primary-50 mb-4">
-                No posts found
+                未找到文章
               </h2>
               <p class="text-primary-600 dark:text-primary-300 mb-8 max-w-md mx-auto">
-                There are no posts tagged with "{tag}". Try browsing other tags or 
-                <a href="/posts" class="text-primary-600 dark:text-primary-300 hover:underline">view all posts</a>.
+                没有找到标签为 "{tag}" 的文章。请尝试浏览其他标签或 
+                <a href="/posts" class="text-primary-600 dark:text-primary-300 hover:underline">查看所有文章</a>。
               </p>
             </div>
           )}
         </div>
 
-        <!-- Mobile sidebar - appears below content on mobile/tablet -->
+        <!-- 移动端侧边栏 - 在手机/平板设备上显示在内容下方 -->
         <div class="xl:hidden mt-12 space-y-6">
-          <!-- Tags -->
+          <!-- 标签 -->
           {siteConfig.postOptions.tags && allTags.length > 0 && (
             <Tags tags={allTags} currentTag={tag} />
           )}
         </div>
 
-        <!-- Desktop sidebar - floats to the right of the content container -->
+        <!-- 桌面端侧边栏 - 浮动在内容容器的右侧 -->
         <div class="hidden xl:block absolute top-0 left-full ml-8 w-64">
           <div class="sticky top-24 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto pb-6">
-            <!-- Tags -->
+            <!-- 标签 -->
             {siteConfig.postOptions.tags && allTags.length > 0 && (
               <Tags tags={allTags} currentTag={tag} />
             )}
@@ -204,7 +204,7 @@ const pagination = {
 </BaseLayout>
 
 <style>
-  /* Enhanced posts page styles */
+  /* 增强的文章页面样式 */
   .posts-grid {
     display: grid;
     gap: 2rem;
@@ -216,7 +216,7 @@ const pagination = {
     }
   }
 
-  /* Tag highlight in header */
+  /* 页眉中的标签高亮 */
   .tag-highlight {
     @apply bg-gradient-to-r from-highlight-500 to-highlight-600 text-white;
   }
