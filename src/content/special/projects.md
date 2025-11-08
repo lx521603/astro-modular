@@ -1,5 +1,5 @@
 ---
-title: Projects
-description: View all related projects.
+title: 项目
+description: 浏览相关项目
 ---
-Related projects.
+相关项目
