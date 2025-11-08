@@ -10,55 +10,55 @@ import Tags from '@/components/Tags.astro';
 import Pagination from '@/components/Pagination.astro';
 import Icon from '@/components/Icon.astro';
 
-// Get special content for posts page
+// 获取文章页面的特殊内容
 let postsPageContent;
 try {
   postsPageContent = await getCollection('special', ({ slug }) => slug === 'posts');
 } catch (error) {
-  // Fallback if special collection doesn't exist or posts.md doesn't exist
+  // 如果特殊集合不存在或 posts.md 不存在，则使用回退方案
   postsPageContent = [];
 }
 
 const postsPageData = postsPageContent.length > 0 ? postsPageContent[0] : null;
 
-// Get query parameters
+// 获取查询参数
 const url = new URL(Astro.request.url);
 const selectedTag = url.searchParams.get('tag');
 
-// Get all posts
+// 获取所有文章
 const allPosts = await getCollection('posts');
 
-// Filter posts based on environment
+// 根据环境过滤文章
 const isDev = import.meta.env.DEV;
 const visiblePosts = allPosts.filter(post => shouldShowPost(post, isDev));
 
-// Sort posts by date (newest first)
+// 按日期排序文章（最新的在前）
 const sortedPosts = sortPostsByDate(visiblePosts);
 
-// Filter by tag if specified
+// 如果指定了标签，则按标签过滤
 const filteredPosts = selectedTag
   ? sortedPosts.filter(post => post.data.tags?.includes(selectedTag))
   : sortedPosts;
 
-// Pagination
+// 分页设置
 const postsPerPage = siteConfig.postOptions.postsPerPage;
 const totalPosts = filteredPosts.length;
 const totalPages = Math.ceil(totalPosts / postsPerPage);
-const currentPage = 1; // This is the first page
+const currentPage = 1; // 这是第一页
 const startIndex = 0;
 const endIndex = Math.min(postsPerPage, totalPosts);
 const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
 
-// Extract all unique tags
+// 提取所有唯一标签
 const allTags = extractTags(sortedPosts);
 
-// Generate SEO data
+// 生成 SEO 数据
 const pageTitle = selectedTag
-  ? `Posts tagged "${selectedTag}"`
-  : (postsPageData?.data.title || 'All Posts');
+  ? `标签为 "${selectedTag}" 的文章`
+  : (postsPageData?.data.title || '所有文章');
 const pageDescription = selectedTag
-  ? `All posts tagged with "${selectedTag}"`
-  : (postsPageData?.data.description || `Browse all ${totalPosts} posts on ${siteConfig.title}`);
+  ? `所有标签为 "${selectedTag}" 的文章`
+  : (postsPageData?.data.description || `浏览 ${siteConfig.title} 上的所有 ${totalPosts} 篇文章`);
 
 const seoData = {
   title: `${pageTitle} | ${siteConfig.title}`,
@@ -67,7 +67,7 @@ const seoData = {
   ogType: 'website' as const
 };
 
-// Pagination info
+// 分页信息
 const baseUrl = selectedTag ? `/posts?tag=${encodeURIComponent(selectedTag)}` : '/posts';
 const pagination = {
   currentPage,
@@ -81,7 +81,7 @@ const pagination = {
 
 <BaseLayout seoData={seoData}>
   <Fragment slot="head">
-    <!-- Preload only the first post's image to avoid unused preload warnings -->
+    <!-- 仅预加载第一篇文章的图片以避免未使用的预加载警告 -->
     {paginatedPosts.length > 0 && (() => {
       const firstPost = paginatedPosts[0];
       if (!firstPost.data.image || typeof firstPost.data.image === 'string' && firstPost.data.image.startsWith('http')) return null;
@@ -102,7 +102,7 @@ const pagination = {
 
   <div class="py-8 relative">
     <div class="mx-auto px-4 sm:px-6 lg:px-8 mb-12" style={`max-width: ${siteConfig.layout.contentWidth}`}>
-      <!-- Header -->
+      <!-- 页眉 -->
       <header class="mb-8">
         <div class="flex items-start justify-between mb-3">
           <h1 class="text-lg font-bold text-primary-900 dark:text-primary-50">
@@ -112,33 +112,34 @@ const pagination = {
             <a
               href="/rss.xml"
               class="inline-flex items-center px-3 py-2 text-sm font-medium text-highlight-600 dark:text-highlight-400 bg-highlight-50 dark:bg-highlight-900/20 rounded-lg border border-highlight-200 dark:border-highlight-700 hover:bg-highlight-100 dark:hover:bg-highlight-900/40 hover:text-highlight-700 dark:hover:text-highlight-300 transition-all duration-200"
-              title="Subscribe to RSS feed"
+              title="订阅 RSS 源"
               data-no-swup
             >
               <Icon name="rss" class="w-4 h-4 mr-1.5" />
-              RSS Feed
+              RSS 源
             </a>
             <a
               href="/feed.xml"
               class="inline-flex items-center px-3 py-2 text-sm font-medium text-highlight-600 dark:text-highlight-400 bg-highlight-50 dark:bg-highlight-900/20 rounded-lg border border-highlight-200 dark:border-highlight-700 hover:bg-highlight-100 dark:hover:bg-highlight-900/40 hover:text-highlight-700 dark:hover:text-highlight-300 transition-all duration-200"
-              title="Subscribe to Atom feed"
+              title="订阅 Atom 源"
               data-no-swup
             >
               <Icon name="atom" class="w-4 h-4 mr-1.5" />
-              Atom Feed
+              Atom 源
             </a>
           </div>
         </div>
         <p class="text-base text-primary-600 dark:text-primary-300">
           {selectedTag ? (
             <>
-              Showing <strong>{filteredPosts.length}</strong> posts tagged with
+              显示 <strong>{filteredPosts.length}</strong> 篇标签为
               <span class="inline-flex items-center px-2 py-1 bg-highlight-100 dark:bg-highlight-900/30 text-highlight-800 dark:text-highlight-200 rounded text-sm font-medium ml-1">
                 #{selectedTag}
               </span>
+              的文章
             </>
           ) : (
-            <>Explore all <strong>{totalPosts}</strong> posts</>
+            <>浏览所有 <strong>{totalPosts}</strong> 篇文章</>
           )}
         </p>
 
@@ -149,53 +150,53 @@ const pagination = {
               class="inline-flex items-center text-sm text-primary-600 dark:text-primary-300 hover:text-primary-800 dark:hover:text-primary-200 transition-colors"
             >
               <Icon name="arrow-left" class="w-4 h-4 mr-1" />
-              Show all posts
+              显示所有文章
             </a>
           </div>
         )}
       </header>
 
       <div class="relative">
-        <!-- Main content -->
+        <!-- 主要内容 -->
         <div class="max-w-none">
           {paginatedPosts.length > 0 ? (
             <>
-              <!-- Posts list -->
+              <!-- 文章列表 -->
               <div class="space-y-4 mb-12">
                 {paginatedPosts.map((post, index) => (
                   <PostCard post={post} eager={index < 2} context="posts" />
                 ))}
               </div>
 
-              <!-- Pagination -->
+              <!-- 分页 -->
               <Pagination pagination={pagination} baseUrl={baseUrl} />
             </>
           ) : selectedTag ? (
-            <!-- No posts for selected tag -->
+            <!-- 没有找到对应标签的文章 -->
             <div class="text-center py-16">
               <Icon name="tag" class="w-16 h-16 text-primary-400 dark:text-primary-500 mx-auto mb-6" />
               <h2 class="font-semibold text-primary-900 dark:text-primary-50 mb-4">
-                No posts found
+                未找到文章
               </h2>
               <p class="text-primary-600 dark:text-primary-300 mb-8 max-w-md mx-auto">
-                There are no posts tagged with "{selectedTag}". Try browsing other tags or
-                <a href="/posts" class="text-primary-600 dark:text-primary-300 hover:underline">view all posts</a>.
+                没有找到标签为 "{selectedTag}" 的文章。请尝试浏览其他标签或
+                <a href="/posts" class="text-primary-600 dark:text-primary-300 hover:underline">查看所有文章</a>。
               </p>
             </div>
           ) : (
-            <!-- No posts at all -->
+            <!-- 没有任何文章 -->
             <div class="text-center py-16">
               <Icon name="file-text" class="w-16 h-16 text-primary-400 dark:text-primary-500 mx-auto mb-6" />
               <h2 class="text-2xl font-semibold text-primary-900 dark:text-primary-50 mb-4">
-                No posts yet
+                暂无文章
               </h2>
               <p class="text-primary-600 dark:text-primary-300 mb-8">
-                This blog is just getting started. Check back soon for new content!
+                博客刚刚开始建设。请稍后再来查看新内容！
               </p>
               {isDev && (
                 <div class="max-w-md mx-auto p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
                   <p class="text-sm text-blue-800 dark:text-blue-200">
-                    <strong>Dev Mode:</strong> Add some posts to the <code>content/posts/</code> directory to see them here.
+                    <strong>开发模式：</strong>在 <code>content/posts/</code> 目录中添加一些文章即可在此处看到它们。
                   </p>
                 </div>
               )}
@@ -203,18 +204,18 @@ const pagination = {
           )}
         </div>
 
-        <!-- Mobile sidebar - appears below content on mobile/tablet -->
+        <!-- 移动端侧边栏 - 在手机/平板设备上显示在内容下方 -->
         <div class="xl:hidden mt-12 space-y-6">
-          <!-- Tags -->
+          <!-- 标签 -->
           {siteConfig.postOptions.tags && allTags.length > 0 && (
             <Tags tags={allTags} />
           )}
         </div>
 
-        <!-- Desktop sidebar - floats to the right of the content container -->
+        <!-- 桌面端侧边栏 - 浮动在内容容器的右侧 -->
         <div class="hidden xl:block absolute top-0 left-full ml-8 w-64">
           <div class="sticky top-24 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto pb-6">
-            <!-- Tags -->
+            <!-- 标签 -->
             {siteConfig.postOptions.tags && allTags.length > 0 && (
               <Tags tags={allTags} />
             )}
@@ -226,7 +227,7 @@ const pagination = {
 </BaseLayout>
 
 <style>
-  /* Enhanced posts page styles */
+  /* 增强的文章页面样式 */
   .posts-grid {
     display: grid;
     gap: 2rem;
@@ -238,7 +239,7 @@ const pagination = {
     }
   }
 
-  /* Tag highlight in header */
+  /* 页眉中的标签高亮 */
   .tag-highlight {
     @apply bg-gradient-to-r from-highlight-500 to-highlight-600 text-white;
   }
