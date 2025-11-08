@@ -17,27 +17,27 @@ export interface Props {
 
 const { documentation } = Astro.props;
 
-// Check if there are any real categories in the system
+// 检查系统中是否有真实的分类
 const allDocs = await getCollection('docs');
 const docsHaveCategories = hasDocCategories(allDocs);
 
-// Render the documentation content
+// 渲染文档内容
 const { render } = await import('astro:content');
 const { Content, headings } = await render(documentation);
 
-// Generate SEO data
+// 生成 SEO 数据
 const seoData = generateDocumentationSEO(documentation, Astro.url.href);
 
-// Generate table of contents from headings using configurable depth
+// 从标题生成目录，使用可配置的深度
 const maxDepth = siteConfig.tableOfContents.depth;
 const toc = headings.filter(h => h.depth >= 2 && h.depth <= maxDepth);
 
-// Check if TOC should be shown - global setting, then hideTOC frontmatter, then showTOC frontmatter (default true for docs)
+// 检查是否应显示目录 - 全局设置，然后是 hideTOC frontmatter，然后是 showTOC frontmatter（文档默认为 true）
 const hideTOC = documentation.data.hideTOC === true;
 const showTOC = documentation.data.showTOC !== undefined ? documentation.data.showTOC : true;
 const shouldShowTOC = siteConfig.tableOfContents.enabled && !hideTOC && showTOC && toc.length > 0;
 
-// Generate structured data
+// 生成结构化数据
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'TechArticle',
@@ -59,17 +59,17 @@ const structuredData = {
   articleSection: docsHaveCategories
     ? (documentation.data.category && documentation.data.category.trim() !== '' && documentation.data.category !== 'General'
         ? documentation.data.category
-        : 'Unsorted')
+        : '未分类')
     : undefined
 };
 ---
 
 <BaseLayout seoData={seoData}>
   <Fragment slot="head">
-    <!-- Structured Data -->
+    <!-- 结构化数据 -->
     <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-    <!-- Preload documentation image if exists -->
+    <!-- 如果存在文档图片则预加载 -->
     {documentation.data.image && documentation.data.hideCoverImage !== true && typeof documentation.data.image === 'string' && !documentation.data.image.startsWith('http') && (
       <link
         rel="preload"
@@ -82,57 +82,57 @@ const structuredData = {
 
   <div class="py-8 relative">
     <div class="mx-auto px-4 sm:px-6 lg:px-8 relative" style={`max-width: ${siteConfig.layout.contentWidth}`}>
-      <!-- Documentation content -->
+      <!-- 文档内容 -->
       <article class={`bg-primary-50 dark:bg-primary-900 rounded-lg border border-primary-200 dark:border-primary-700 shadow-sm ${documentation.data.image && documentation.data.hideCoverImage !== true ? 'overflow-hidden' : ''}`}>
         {documentation.data.image && documentation.data.hideCoverImage !== true && (() => {
-          // Process image path similar to other layouts
+          // 处理图片路径，类似于其他布局
           let rawImage = documentation.data.image;
           if (Array.isArray(rawImage)) {
             rawImage = rawImage[0];
           }
           
-          // Clean Obsidian brackets
+          // 清理 Obsidian 括号
           let cleanImagePath = typeof rawImage === 'string' ? rawImage : '';
           if (cleanImagePath.startsWith('[[') && cleanImagePath.endsWith(']]')) {
             cleanImagePath = cleanImagePath.slice(2, -2);
           }
           
-          // Determine src and basePath for ImageWrapper
+          // 确定 ImageWrapper 的 src 和 basePath
           let imageSrc = cleanImagePath;
           let imageBasePath = '';
           
           if (typeof cleanImagePath === 'string' && cleanImagePath.startsWith('http')) {
-            // External URL - pass as-is
+            // 外部 URL - 直接传递
             imageSrc = cleanImagePath;
             imageBasePath = '';
           } else {
-            // Detect folder-based vs file-based: if image path starts with 'attachments/',
-            // it's a single-file doc (shared attachments folder)
+            // 检测基于文件夹与基于文件：如果图片路径以 'attachments/' 开头，
+            // 则是单文件文档（共享附件文件夹）
             const isFileBased = typeof cleanImagePath === 'string' && cleanImagePath.startsWith('attachments/');
             
             if (isFileBased) {
-              // Single-file doc - remove attachments/ prefix
+              // 单文件文档 - 移除 attachments/ 前缀
               imageSrc = cleanImagePath.replace('attachments/', '');
               imageBasePath = '/docs/attachments/';
             } else {
-              // Folder-based doc - sync script copies images to doc folder root
-              // Remove 'images/' or 'attachments/' prefixes if present (sync script removes them)
+              // 基于文件夹的文档 - 同步脚本将图片复制到文档文件夹根目录
+              // 如果存在则移除 'images/' 或 'attachments/' 前缀（同步脚本会移除它们）
               if (cleanImagePath.startsWith('images/') || cleanImagePath.startsWith('attachments/')) {
                 imageSrc = cleanImagePath.replace(/^(images|attachments)\//, '');
               } else {
                 imageSrc = cleanImagePath;
               }
-              // Safety check: ensure documentation.id exists before using it
+              // 安全检查：在使用 documentation.id 之前确保它存在
               if (documentation.id) {
                 imageBasePath = `/docs/${documentation.id}/`;
               } else {
-                // Fallback to attachments directory if documentation.id is undefined
+                // 如果 documentation.id 未定义，回退到附件目录
                 imageBasePath = '/docs/attachments/';
               }
             }
           }
           
-          // Convert to WebP if applicable (sync-images.js creates WebP versions)
+          // 如果适用则转换为 WebP（sync-images.js 会创建 WebP 版本）
           imageSrc = getOptimizedFormat(imageSrc);
           
           return (
@@ -140,7 +140,7 @@ const structuredData = {
               <ImageWrapper
                 src={imageSrc}
                 basePath={imageBasePath}
-                alt={documentation.data.imageAlt || `Featured image for documentation: ${documentation.data.title}`}
+                alt={documentation.data.imageAlt || `文档特色图片: ${documentation.data.title}`}
                 class="w-full h-full object-cover"
                 width={800}
                 height={450}
@@ -153,9 +153,9 @@ const structuredData = {
           );
         })()}
 
-        <!-- Documentation content wrapper -->
+        <!-- 文档内容包装器 -->
         <div class={`p-6 ${documentation.data.image && documentation.data.hideCoverImage !== true ? 'rounded-b-lg' : 'rounded-lg'}`}>
-          <!-- Documentation header -->
+          <!-- 文档页眉 -->
           <header class="mb-4">
             <h1 class="text-xl font-bold text-primary-900 dark:text-primary-50 mb-6 leading-tight">
               {documentation.data.title}
@@ -166,7 +166,7 @@ const structuredData = {
                 <span class="px-2 py-1 bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 rounded-full text-xs font-medium">
                   {documentation.data.category && documentation.data.category.trim() !== '' && documentation.data.category !== 'General'
                     ? documentation.data.category
-                    : 'Unsorted'}
+                    : '未分类'}
                 </span>
               )}
 
@@ -179,7 +179,7 @@ const structuredData = {
                     </>
                   )}
                   <span class="text-xs">
-                    Version {documentation.data.version}
+                    版本 {documentation.data.version}
                   </span>
                 </>
               )}
@@ -194,14 +194,14 @@ const structuredData = {
                   )}
                   <time datetime={documentation.data.lastModified.toISOString()} class="text-xs">
                     <span class="hidden sm:inline">
-                      Updated {documentation.data.lastModified.toLocaleDateString('en-US', {
+                      更新于 {documentation.data.lastModified.toLocaleDateString('zh-CN', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric'
                       })}
                     </span>
                     <span class="sm:hidden">
-                      Updated {documentation.data.lastModified.toLocaleDateString('en-US', {
+                      更新于 {documentation.data.lastModified.toLocaleDateString('zh-CN', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric'
@@ -213,14 +213,14 @@ const structuredData = {
             </div>
           </header>
 
-          <!-- Documentation content -->
+          <!-- 文档内容 -->
           <div class="prose dark:prose-dark max-w-none" id="documentation-content">
             <Content />
           </div>
         </div>
       </article>
 
-      <!-- Desktop TOC - floats to the right of the content container -->
+      <!-- 桌面端目录 - 浮动在内容容器的右侧 -->
       {shouldShowTOC && (
         <div class="hidden xl:block absolute top-0 left-full ml-1 w-64">
           <div class="sticky top-24" id="toc">
@@ -231,24 +231,24 @@ const structuredData = {
     </div>
   </div>
 
-  <!-- Lightbox is handled globally by BaseLayout -->
+  <!-- Lightbox 由 BaseLayout 全局处理 -->
 
   <Fragment slot="scripts">
     <script>
-      // Initialize lightbox functionality for images
+      // 为图片初始化灯箱功能
       document.addEventListener('DOMContentLoaded', () => {
         function initializeLightbox() {
           const images = document.querySelectorAll('img');
           images.forEach((img, index) => {
-            // Skip images that are already clickable (like in galleries)
+            // 跳过已经可点击的图片（如图库中的图片）
             if (img.closest('a') || img.closest('.image-grid')) {
               return;
             }
 
-            // Make image clickable
+            // 使图片可点击
             img.style.cursor = 'pointer';
             img.addEventListener('click', () => {
-              // Dispatch custom event to open lightbox
+              // 派发自定义事件以打开灯箱
               window.dispatchEvent(new CustomEvent('openLightbox', {
                 detail: { index }
               }));
@@ -256,11 +256,11 @@ const structuredData = {
           });
         }
 
-        // Initialize lightbox after a short delay to ensure images are loaded
+        // 在短暂延迟后初始化灯箱，确保图片已加载
         setTimeout(initializeLightbox, 200);
       });
 
-      // Remove duplicate H1 from documentation content (since we render it in header)
+      // 从文档内容中移除重复的 H1（因为我们在页眉中渲染了它）
       document.addEventListener('DOMContentLoaded', function() {
         const documentationContent = document.getElementById('documentation-content');
         if (documentationContent) {
@@ -271,19 +271,19 @@ const structuredData = {
         }
       });
 
-      // Process content after DOM loads
+      // 在 DOM 加载后处理内容
       document.addEventListener('DOMContentLoaded', function() {
-        // Initialize image grid layouts (fallback for browsers without :has() support)
+        // 初始化图片网格布局（对不支持 :has() 的浏览器的回退方案）
         function initializeImageGrids() {
-          // Check if browser supports :has() selector
+          // 检查浏览器是否支持 :has() 选择器
           const supportsHas = CSS.supports('selector(:has(img))');
 
           if (supportsHas) {
-            // Browser supports :has(), CSS will handle it automatically
+            // 浏览器支持 :has()，CSS 会自动处理
             return;
           }
 
-          // Fallback for browsers without :has() support
+          // 对不支持 :has() 的浏览器的回退方案
           const paragraphs = document.querySelectorAll('.prose p');
 
           paragraphs.forEach(p => {
@@ -295,27 +295,27 @@ const structuredData = {
               return node.nodeType === Node.ELEMENT_NODE && !['IMG', 'PICTURE', 'BR'].includes(((node as Element).tagName || ''));
             });
 
-            // Only process if paragraph contains 2+ images and no other meaningful content
+            // 仅当段落包含 2+ 张图片且没有其他有意义的内容时才处理
             if (images.length >= 2 && textNodes.length === 0 && otherElements.length === 0) {
-              // Remove any existing image-grid classes first
+              // 首先移除任何现有的 image-grid 类
               p.classList.remove('image-grid', 'image-grid-2', 'image-grid-3', 'image-grid-4', 'image-grid-5', 'image-grid-6');
 
-              // Add the appropriate grid class
+              // 添加适当的网格类
               const gridClass = `image-grid-${Math.min(images.length, 6)}`;
               p.classList.add('image-grid', gridClass);
             }
           });
         }
 
-        // Initialize image grids
+        // 初始化图片网格
         initializeImageGrids();
 
-        // Process all external links in content to open in new tabs (including reference links)
+        // 处理内容中的所有外部链接以在新标签页中打开（包括参考链接）
         const allLinks = document.querySelectorAll('.prose a[href]');
         allLinks.forEach(link => {
           const href = link.getAttribute('href');
           if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
-            // Skip if already has target attribute (e.g., manually set)
+            // 如果已经有 target 属性则跳过（例如手动设置的）
             if (!link.hasAttribute('target')) {
               link.setAttribute('target', '_blank');
               link.setAttribute('rel', 'noopener noreferrer');
@@ -323,20 +323,20 @@ const structuredData = {
           }
         });
 
-        // Wrap tables in responsive containers for better mobile experience
+        // 将表格包装在响应式容器中，以获得更好的移动端体验
         const tables = document.querySelectorAll('.prose table');
         tables.forEach((table) => {
           if (table.parentElement && !table.parentElement.classList.contains('table-wrapper')) {
             const wrapper = document.createElement('div');
             wrapper.className = 'table-wrapper';
-            // Let CSS handle the styling instead of inline styles
+            // 让 CSS 处理样式而不是内联样式
 
             if (table.parentNode) {
               (table.parentNode as Node & ParentNode).insertBefore(wrapper, table);
             }
             wrapper.appendChild(table);
 
-            // Reset table margin since wrapper handles it
+            // 重置表格边距，因为包装器会处理它
             (table as unknown as HTMLElement).style.margin = '0';
           }
         });
