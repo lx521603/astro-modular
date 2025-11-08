@@ -26,10 +26,10 @@ export interface Props {
 
 const { project } = Astro.props;
 
-// Normalize status for consistent handling
+// 标准化状态以进行一致处理
 const status = normalizeStatus(project.data.status);
 
-// Smart repository icon detection
+// 智能仓库图标检测
 const getRepositoryIcon = (repositoryUrl: string) => {
   if (!repositoryUrl) return 'folder-git-2';
 
@@ -44,15 +44,15 @@ const getRepositoryIcon = (repositoryUrl: string) => {
   }
 };
 
-// Check if we're in development mode
+// 检查是否处于开发模式
 const isDev = import.meta.env.DEV;
 
-// Generate SEO data
+// 生成 SEO 数据
 const seoData = generateProjectSEO(project, import.meta.env.SITE || '');
 
-// Image handling is now done by ImageWrapper component
+// 图片处理现在由 ImageWrapper 组件完成
 
-// Generate structured data for the project
+// 为项目生成结构化数据
 const structuredData = {
   "@context": "https://schema.schema.org",
   "@type": "CreativeWork",
@@ -80,37 +80,37 @@ const structuredData = {
   "codeRepository": project.data.repositoryUrl
 };
 
-// Get all posts for wikilink resolution
+// 获取所有文章用于维基链接解析
 const allPosts = await getCollection('posts');
 const visiblePosts = allPosts.filter(p => shouldShowPost(p as any, isDev));
 
-// Get all projects to check if any have categories
+// 获取所有项目以检查是否有分类
 const allProjectsForCategories = await getCollection('projects');
 const visibleProjectsForCategories = allProjectsForCategories.filter(p => shouldShowPost(p as any, isDev));
 const projectsHaveCategories = hasProjectCategories(allProjectsForCategories);
 
-// Process the project content and get processed data including word count
+// 处理项目内容并获取处理后的数据，包括字数统计
 const { Content, headings } = await processPost(project as any);
 
-// Generate table of contents if enabled - global setting, then hideTOC frontmatter (default true for projects)
+// 如果启用则生成目录 - 全局设置，然后是 hideTOC frontmatter（项目默认为 true）
 const hideTOC = project.data.hideTOC === true;
 const shouldShowTOC = siteConfig.tableOfContents.enabled && !hideTOC && headings.length > 0;
 const toc = shouldShowTOC ? await generateTOC(headings) : [];
 
-// Get adjacent projects for navigation
+// 获取相邻项目用于导航
 const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProjectsForCategories as any, project.id);
 ---
 
 <BaseLayout seoData={seoData}>
   <Fragment slot="head">
-    <!-- Structured Data -->
+    <!-- 结构化数据 -->
     <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-    <!-- Preload project cover image - only for projects that will definitely show the image immediately -->
+    <!-- 预加载项目封面图片 - 仅针对肯定会立即显示图片的项目 -->
     {(() => {
       if (!project.data.image || project.data.hideCoverImage === true) return false;
 
-      // Projects always show images when available, so always preload
+      // 项目在有图片时始终显示图片，因此始终预加载
       const shouldPreload = true;
 
       return shouldPreload;
@@ -123,7 +123,7 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
       />
     )}
 
-    <!-- Project-specific meta tags -->
+    <!-- 项目特定的元标签 -->
     {projectsHaveCategories && project.data.categories && project.data.categories.length > 0 && (
       <meta name="keywords" content={project.data.categories.join(', ')}>
     )}
@@ -131,58 +131,58 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
 
   <div class="py-8 relative">
     <div class="mx-auto px-4 sm:px-6 lg:px-8 relative" style={`max-width: ${siteConfig.layout.contentWidth}`}>
-      <!-- Main content -->
+      <!-- 主要内容 -->
       <article class={`bg-primary-50 dark:bg-primary-900 rounded-lg border border-primary-200 dark:border-primary-700 shadow-sm ${project.data.image && project.data.hideCoverImage !== true ? 'overflow-hidden' : ''}`}>
-        {/* Cover image */}
+        {/* 封面图片 */}
         {project.data.image && project.data.hideCoverImage !== true && (() => {
-          // Process image path similar to ProjectCard
+          // 处理图片路径，类似于 ProjectCard
           let rawImage = project.data.image;
           if (Array.isArray(rawImage)) {
             rawImage = rawImage[0];
           }
           
-          // Clean Obsidian brackets
+          // 清理 Obsidian 括号
           let cleanImagePath = typeof rawImage === 'string' ? rawImage : '';
           if (cleanImagePath.startsWith('[[') && cleanImagePath.endsWith(']]')) {
             cleanImagePath = cleanImagePath.slice(2, -2);
           }
           
-          // Determine src and basePath for ImageWrapper
+          // 确定 ImageWrapper 的 src 和 basePath
           let imageSrc = cleanImagePath;
           let imageBasePath = '';
           
           if (typeof cleanImagePath === 'string' && cleanImagePath.startsWith('http')) {
-            // External URL - pass as-is
+            // 外部 URL - 直接传递
             imageSrc = cleanImagePath;
             imageBasePath = '';
           } else {
-            // Detect folder-based vs file-based: if image path starts with 'attachments/',
-            // it's a single-file project (shared attachments folder)
+            // 检测基于文件夹与基于文件：如果图片路径以 'attachments/' 开头，
+            // 则是单文件项目（共享附件文件夹）
             const isFileBased = typeof cleanImagePath === 'string' && cleanImagePath.startsWith('attachments/');
             
             if (isFileBased) {
-              // Single-file project - remove attachments/ prefix
+              // 单文件项目 - 移除 attachments/ 前缀
               imageSrc = cleanImagePath.replace('attachments/', '');
               imageBasePath = '/projects/attachments/';
             } else {
-              // Folder-based project - sync script copies images to project folder root
-              // Remove 'images/' or 'attachments/' prefixes if present (sync script removes them)
+              // 基于文件夹的项目 - 同步脚本将图片复制到项目文件夹根目录
+              // 如果存在则移除 'images/' 或 'attachments/' 前缀（同步脚本会移除它们）
               if (cleanImagePath.startsWith('images/') || cleanImagePath.startsWith('attachments/')) {
                 imageSrc = cleanImagePath.replace(/^(images|attachments)\//, '');
               } else {
                 imageSrc = cleanImagePath;
               }
-              // Safety check: ensure project.id exists before using it
+              // 安全检查：在使用 project.id 之前确保它存在
               if (project.id) {
                 imageBasePath = `/projects/${project.id}/`;
               } else {
-                // Fallback to attachments directory if project.id is undefined
+                // 如果 project.id 未定义，回退到附件目录
                 imageBasePath = '/projects/attachments/';
               }
             }
           }
           
-          // Convert to WebP if applicable (sync-images.js creates WebP versions)
+          // 如果适用则转换为 WebP（sync-images.js 会创建 WebP 版本）
           imageSrc = getOptimizedFormat(imageSrc);
           
           return (
@@ -190,7 +190,7 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
               <ImageWrapper
                 src={imageSrc}
                 basePath={imageBasePath}
-                alt={project.data.imageAlt || `Featured image for project: ${project.data.title}`}
+                alt={project.data.imageAlt || `项目特色图片: ${project.data.title}`}
                 class="w-full h-full"
                 width={800}
                 height={450}
@@ -203,15 +203,15 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
           );
         })()}
 
-        <!-- Project content wrapper -->
+        <!-- 项目内容包装器 -->
         <div class={`p-6 ${project.data.image && project.data.hideCoverImage !== true ? 'rounded-b-lg' : 'rounded-lg'}`}>
-          <!-- Project header -->
+          <!-- 项目页眉 -->
           <header class="mb-4 relative">
             <h1 class="text-xl font-bold text-primary-900 dark:text-primary-50 mb-6 leading-tight pr-20">
               {project.data.title}
             </h1>
 
-            <!-- Floating Action Buttons -->
+            <!-- 浮动操作按钮 -->
             <div class="absolute top-0 right-0 flex gap-2">
               {project.data.repositoryUrl && (
                 <a
@@ -219,7 +219,7 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
                   target="_blank"
                   rel="noopener noreferrer"
                   class="inline-flex items-center justify-center px-2 py-2 text-sm text-primary-600 dark:text-primary-300 bg-primary-50 dark:bg-primary-800 rounded-lg border border-primary-200 dark:border-primary-700 hover:bg-highlight-100 dark:hover:bg-highlight-800 hover:text-highlight-700 dark:hover:text-highlight-300 transition-all duration-200 hover:shadow-md"
-                  title="View Repository"
+                  title="查看仓库"
                 >
                   <Icon name={getRepositoryIcon(project.data.repositoryUrl)} class="w-4 h-4" />
                 </a>
@@ -231,10 +231,10 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
                   rel="noopener noreferrer"
                   class="inline-flex items-center gap-1.5 px-3 py-2 text-sm bg-highlight-600 dark:bg-highlight-400 text-white border-highlight-600 dark:border-highlight-400 rounded-lg hover:opacity-90 transition-all duration-200"
                   style="color: white !important;"
-                  title="View Project"
+                  title="查看项目"
                 >
-                  <span class="hidden sm:inline">View</span>
-                  <span class="sm:hidden">View</span>
+                  <span class="hidden sm:inline">查看</span>
+                  <span class="sm:hidden">查看</span>
                   <Icon name="external-link" class="w-4 h-4" />
                 </a>
               )}
@@ -267,7 +267,7 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
 
             </div>
 
-            <!-- Categories -->
+            <!-- 分类 -->
             {projectsHaveCategories && project.data.categories && project.data.categories.length > 0 && (
               <div class="flex flex-wrap gap-2 mb-8">
                 {project.data.categories.map((category: string) => (
@@ -282,7 +282,7 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
 
           </header>
 
-          <!-- Article content -->
+          <!-- 文章内容 -->
           <div class="prose dark:prose-dark max-w-none" id="project-content">
             <Content />
           </div>
@@ -291,7 +291,7 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
             <LinkedMentions currentSlug={project.id} />
           )}
 
-          <!-- Project navigation -->
+          <!-- 项目导航 -->
           {siteConfig.postOptions.postNavigation && (prevProject || nextProject) && (
             <nav class="mt-8 pt-8 border-t border-primary-200 dark:border-primary-700">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -330,7 +330,7 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
             </nav>
           )}
 
-          <!-- Giscus Comments -->
+          <!-- Giscus 评论 -->
           {siteConfig.postOptions.comments.enabled && (
             <div class="mt-16">
               <GiscusComments
@@ -344,7 +344,7 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
         </div>
       </article>
 
-      <!-- Desktop TOC - floats to the right of the content container -->
+      <!-- 桌面端目录 - 浮动在内容容器的右侧 -->
       {shouldShowTOC && (
         <div class="hidden xl:block absolute top-8 left-full ml-1 w-64">
           <div class="sticky top-24" id="toc">
@@ -357,7 +357,7 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
 
   <Fragment slot="scripts">
     <script define:vars={{ posts: visiblePosts, commentsEnabled: siteConfig.postOptions.comments.enabled, postTitle: project.data.title, postSlug: project.id }}>
-      // Remove duplicate H1 from project content (since we render it in header)
+      // 从项目内容中移除重复的 H1（因为我们在页眉中渲染了它）
       document.addEventListener('DOMContentLoaded', function() {
         const projectContent = document.getElementById('project-content');
         if (projectContent) {
@@ -368,19 +368,19 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
         }
       });
 
-      // Process wikilinks and initialize layouts after content loads
+      // 在内容加载后处理维基链接并初始化布局
       document.addEventListener('DOMContentLoaded', () => {
-        // Initialize image grid layouts (fallback for browsers without :has() support)
+        // 初始化图片网格布局（对不支持 :has() 的浏览器的回退方案）
         function initializeImageGrids() {
-          // Check if browser supports :has() selector
+          // 检查浏览器是否支持 :has() 选择器
           const supportsHas = CSS.supports('selector(:has(img))');
 
           if (supportsHas) {
-            // Browser supports :has(), CSS will handle it automatically
+            // 浏览器支持 :has()，CSS 会自动处理
             return;
           }
 
-          // Fallback for browsers without :has() support
+          // 对不支持 :has() 的浏览器的回退方案
           const paragraphs = document.querySelectorAll('.prose p');
 
           paragraphs.forEach(p => {
@@ -392,27 +392,27 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
               node.nodeType === Node.ELEMENT_NODE && !['IMG', 'PICTURE', 'BR'].includes(node.tagName)
             );
 
-            // Only process if paragraph contains 2+ images and no other meaningful content
+            // 仅当段落包含 2+ 张图片且没有其他有意义的内容时才处理
             if (images.length >= 2 && textNodes.length === 0 && otherElements.length === 0) {
-              // Remove any existing image-grid classes first
+              // 首先移除任何现有的 image-grid 类
               p.classList.remove('image-grid', 'image-grid-2', 'image-grid-3', 'image-grid-4', 'image-grid-5', 'image-grid-6');
 
-              // Add the appropriate grid class
+              // 添加适当的网格类
               const gridClass = `image-grid-${Math.min(images.length, 6)}`;
               p.classList.add('image-grid', gridClass);
             }
           });
         }
 
-        // Initialize image grids
+        // 初始化图片网格
         initializeImageGrids();
 
-        // Process all external links in content to open in new tabs (including reference links)
+        // 处理内容中的所有外部链接以在新标签页中打开（包括参考链接）
         const allLinks = document.querySelectorAll('.prose a[href]');
         allLinks.forEach(link => {
           const href = link.getAttribute('href');
           if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
-            // Skip if already has target attribute (e.g., manually set)
+            // 如果已经有 target 属性则跳过（例如手动设置的）
             if (!link.hasAttribute('target')) {
               link.setAttribute('target', '_blank');
               link.setAttribute('rel', 'noopener noreferrer');
@@ -420,17 +420,17 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
           }
         });
 
-        // Make initializeImageGrids globally accessible
+        // 使 initializeImageGrids 在全局可访问
         window.initializeImageGrids = initializeImageGrids;
 
-        // Process wikilinks - unified logic for all wikilink types
+        // 处理维基链接 - 所有维基链接类型的统一逻辑
         function initializeWikilinks() {
           const wikilinks = document.querySelectorAll('.wikilink[data-wikilink]');
 
           wikilinks.forEach(link => {
             const linkText = link.dataset.wikilink;
             
-            // Skip same-page anchors (empty data-wikilink) - they're already properly formatted
+            // 跳过同页锚点（空的 data-wikilink）- 它们已经正确格式化
             if (!linkText || linkText === '') {
               return;
             }
@@ -438,14 +438,14 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
             const displayOverride = link.dataset.displayOverride;
             const currentDisplayText = link.textContent;
 
-            // Find the matching post - use id (not slug, which is deprecated in Astro v6)
+            // 查找匹配的文章 - 使用 id（不是 slug，在 Astro v6 中已弃用）
             const slug = linkText.toLowerCase()
               .replace(/[^a-z0-9\s-]/g, '')
               .replace(/\s+/g, '-')
               .replace(/-+/g, '-')
               .replace(/^-+|-+$/g, '');
 
-            // Helper function to create slug from title (same as resolveWikilink logic)
+            // 从标题创建 slug 的辅助函数（与 resolveWikilink 逻辑相同）
             const createSlugFromTitle = (title: string) => {
               return title.toLowerCase()
                 .replace(/[^a-z0-9\s-]/g, '')
@@ -454,52 +454,52 @@ const { prev: prevProject, next: nextProject } = getAdjacentPosts(visibleProject
                 .replace(/^-+|-+$/g, '');
             };
 
-            // First try exact id match (Astro v6 uses id, not slug)
+            // 首先尝试精确的 id 匹配（Astro v6 使用 id，不是 slug）
             let post = posts.find(p => p.id === slug);
             
-            // If not found, try title match (for wikilinks that use post titles)
+            // 如果未找到，尝试标题匹配（用于使用文章标题的维基链接）
             if (!post) {
               post = posts.find(p => createSlugFromTitle(p.data.title) === slug);
             }
 
           if (post) {
-            // Update href
+            // 更新 href
             link.href = `/posts/${post.id}`;
 
-            // Simple logic:
-            // - If displayOverride exists and is not null, it's a wikilink with custom text [[link|display]] - use it
-            // - If displayOverride is null/undefined, it's a standard markdown link [text](url) - NEVER change the text
-            // - If displayOverride is empty string, it's a naked wikilink [[link]] - use post title
+            // 简单逻辑：
+            // - 如果 displayOverride 存在且不为 null，它是带有自定义文本的维基链接 [[link|display]] - 使用它
+            // - 如果 displayOverride 为 null/undefined，它是标准的 markdown 链接 [text](url) - 永不更改文本
+            // - 如果 displayOverride 为空字符串，它是裸维基链接 [[link]] - 使用文章标题
 
             if (displayOverride && displayOverride !== 'null' && displayOverride !== 'undefined') {
-              // Wikilink with custom display: [[link|display]]
+              // 带有自定义显示的维基链接：[[link|display]]
               link.textContent = displayOverride;
             } else if (displayOverride === 'null' || displayOverride === null || displayOverride === 'undefined' || displayOverride === undefined) {
-              // Standard markdown link: [text](url) - NEVER change the display text
-              // Keep currentDisplayText as-is
+              // 标准的 markdown 链接：[text](url) - 永不更改显示文本
+              // 保持 currentDisplayText 不变
             } else {
-              // Naked wikilink: [[link]] - use post title
+              // 裸维基链接：[[link]] - 使用文章标题
               link.textContent = post.data.title;
             }
           } else {
-            // Mark as broken link
+            // 标记为损坏的链接
             link.classList.add('wikilink-broken');
-            link.title = 'Link not found';
+            link.title = '链接未找到';
           }
         });
       }
 
-      // Make function globally available for Swup re-initialization
+      // 使函数在全局可用，用于 Swup 重新初始化
       window.initializeWikilinks = initializeWikilinks;
 
-      // Initialize wikilinks on initial load
+      // 在初始加载时初始化维基链接
       initializeWikilinks();
       });
 
-      // Image grids, lightbox, and external links are now handled globally by BaseLayout Swup hooks
+      // 图片网格、灯箱和外部链接现在由 BaseLayout Swup 钩子全局处理
 
     </script>
   </Fragment>
 
-  <!-- Lightbox is handled globally by BaseLayout -->
+  <!-- Lightbox 由 BaseLayout 全局处理 -->
 </BaseLayout>
