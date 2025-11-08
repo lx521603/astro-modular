@@ -1,7 +1,7 @@
 ---
-title: Homepage
-description: Welcome to the homepage
+title: 首页
+description: 欢迎来到首页
 ---
-## Thanks for Reading
+## 相逢就是缘
 
-If you're looking for more, check out the [posts](/posts) page.
+如果您想了解更多内容，请查看[文章](/posts)页面。
