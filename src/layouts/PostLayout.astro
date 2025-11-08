@@ -24,15 +24,15 @@ export interface Props {
 
 const { post } = Astro.props;
 
-// Check if we're in development mode
+// 检查是否处于开发模式
 const isDev = import.meta.env.DEV;
 
-// Generate SEO data
+// 生成 SEO 数据
 const seoData = generatePostSEO(post, import.meta.env.SITE || '');
 
 
 
-// Generate structured data for the post
+// 为文章生成结构化数据
 const structuredData = {
   "@context": "https://schema.schema.org",
   "@type": "BlogPosting",
@@ -58,39 +58,39 @@ const structuredData = {
   }
 };
 
-// Get all posts for wikilink resolution
+// 获取所有文章用于维基链接解析
 const allPosts = await getCollection('posts');
 const visiblePosts = allPosts.filter(p => shouldShowPost(p, isDev));
 
-// Process the post content and get processed data including word count
+// 处理文章内容并获取处理后的数据，包括字数统计
 const { Content, headings, wordCount, remarkPluginFrontmatter } = await processPost(post);
 const readingTime = calculateReadingTime(post.body);
 
-// Generate table of contents if enabled
+// 如果启用则生成目录
 const hideTOC = post.data.hideTOC === true;
 const shouldShowTOC = !hideTOC && siteConfig.tableOfContents.enabled && headings.length > 0;
 const toc = shouldShowTOC ? await generateTOC(headings) : [];
 
-// Get adjacent posts for navigation
+// 获取相邻文章用于导航
 const { prev: prevPost, next: nextPost } = getAdjacentPosts(visiblePosts, post.id);
 
-// Check if current post has connections for LocalGraph
+// 检查当前文章是否有 LocalGraph 连接
 let hasLocalGraphConnections = false;
 if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView.showInSidebar) {
   try {
-    // Read the graph data file directly from the file system (works at build time)
+    // 直接从文件系统读取图数据文件（在构建时工作）
     const graphDataPath = join(process.cwd(), 'public', 'graph', 'graph-data.json');
     const graphDataContent = readFileSync(graphDataPath, 'utf-8');
     const graphData = JSON.parse(graphDataContent);
 
-    // Check if current post has any connections (both incoming and outgoing)
+    // 检查当前文章是否有任何连接（传入和传出）
     const matchingConnections = graphData.connections.filter((conn: any) =>
       conn.source === post.id || conn.target === post.id
     );
     
     hasLocalGraphConnections = matchingConnections.length > 0;
   } catch (error) {
-    // If we can't read the graph data at build time, don't show the graph
+    // 如果在构建时无法读取图数据，则不显示图
     hasLocalGraphConnections = false;
   }
 }
@@ -98,16 +98,16 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
 
 <BaseLayout seoData={seoData}>
   <Fragment slot="head">
-    <!-- Structured Data -->
+    <!-- 结构化数据 -->
     <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-    <!-- Preload post cover image - only for posts that will definitely show the image immediately -->
+    <!-- 预加载文章封面图片 - 仅针对肯定会立即显示图片的文章 -->
     {(() => {
       if (!post.data.image || post.data.hideCoverImage === true) return false;
 
       const showCoverImages = siteConfig.postOptions.showPostCardCoverImages;
-      // Only preload for posts that are likely to show the image immediately
-      // Skip preload for complex posts that might have delayed rendering
+      // 仅预加载可能立即显示图片的文章
+      // 跳过可能延迟渲染的复杂文章的预加载
       const shouldPreload = ['all', 'posts', 'featured-and-posts'].includes(showCoverImages) &&
                            post.id !== 'formatting-reference';
 
@@ -121,7 +121,7 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
       />
     )}
 
-    <!-- Post-specific meta tags -->
+    <!-- 文章特定的元标签 -->
     {post.data.targetKeyword && (
       <meta name="keywords" content={post.data.targetKeyword}>
     )}
@@ -129,58 +129,58 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
 
   <div class="py-8 relative">
     <div class="mx-auto px-4 sm:px-6 lg:px-8 relative" style={`max-width: ${siteConfig.layout.contentWidth}`}>
-      <!-- Main content -->
+      <!-- 主要内容 -->
       <article class={`bg-primary-50 dark:bg-primary-900 rounded-lg border border-primary-200 dark:border-primary-700 shadow-sm ${siteConfig.postOptions.showPostCardCoverImages !== 'none' && post.data.image && post.data.hideCoverImage !== true ? 'overflow-hidden' : ''}`}>
-        {/* Cover image - shown if global config allows and not hidden by frontmatter */}
+        {/* 封面图片 - 如果全局配置允许且未被 frontmatter 隐藏则显示 */}
         {siteConfig.postOptions.showPostCardCoverImages !== 'none' && post.data.image && post.data.hideCoverImage !== true && (() => {
-          // Process image path similar to PostCard
+          // 处理图片路径，类似于 PostCard
           let rawImage = post.data.image;
           if (Array.isArray(rawImage)) {
             rawImage = rawImage[0];
           }
           
-          // Clean Obsidian brackets
+          // 清理 Obsidian 括号
           let cleanImagePath = typeof rawImage === 'string' ? rawImage : '';
           if (cleanImagePath.startsWith('[[') && cleanImagePath.endsWith(']]')) {
             cleanImagePath = cleanImagePath.slice(2, -2);
           }
           
-          // Determine src and basePath for ImageWrapper
+          // 确定 ImageWrapper 的 src 和 basePath
           let imageSrc = cleanImagePath;
           let imageBasePath = '';
           
           if (typeof cleanImagePath === 'string' && cleanImagePath.startsWith('http')) {
-            // External URL - pass as-is
+            // 外部 URL - 直接传递
             imageSrc = cleanImagePath;
             imageBasePath = '';
           } else {
-            // Detect folder-based vs file-based: if image path starts with 'attachments/',
-            // it's a single-file post (shared attachments folder)
+            // 检测基于文件夹与基于文件：如果图片路径以 'attachments/' 开头，
+            // 则是单文件文章（共享附件文件夹）
             const isFileBased = typeof cleanImagePath === 'string' && cleanImagePath.startsWith('attachments/');
             
             if (isFileBased) {
-              // Single-file post - remove attachments/ prefix
+              // 单文件文章 - 移除 attachments/ 前缀
               imageSrc = cleanImagePath.replace('attachments/', '');
               imageBasePath = '/posts/attachments/';
             } else {
-              // Folder-based post - sync script copies images to post folder root
-              // Remove 'images/' or 'attachments/' prefixes if present (sync script removes them)
+              // 基于文件夹的文章 - 同步脚本将图片复制到文章文件夹根目录
+              // 如果存在则移除 'images/' 或 'attachments/' 前缀（同步脚本会移除它们）
               if (cleanImagePath.startsWith('images/') || cleanImagePath.startsWith('attachments/')) {
                 imageSrc = cleanImagePath.replace(/^(images|attachments)\//, '');
               } else {
                 imageSrc = cleanImagePath;
               }
-              // Safety check: ensure post.id exists before using it
+              // 安全检查：在使用 post.id 之前确保它存在
               if (post.id) {
                 imageBasePath = `/posts/${post.id}/`;
               } else {
-                // Fallback to attachments directory if post.id is undefined
+                // 如果 post.id 未定义，回退到附件目录
                 imageBasePath = '/posts/attachments/';
               }
             }
           }
           
-          // Convert to WebP if applicable (sync-images.js creates WebP versions)
+          // 如果适用则转换为 WebP（sync-images.js 会创建 WebP 版本）
           imageSrc = getOptimizedFormat(imageSrc);
           
           return (
@@ -188,7 +188,7 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
               <ImageWrapper
                 src={imageSrc}
                 basePath={imageBasePath}
-                alt={post.data.imageAlt || `Featured image for post: ${post.data.title}`}
+                alt={post.data.imageAlt || `文章特色图片: ${post.data.title}`}
                 class="w-full h-full"
                 width={800}
                 height={450}
@@ -201,9 +201,9 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
           );
         })()}
 
-        <!-- Post content wrapper -->
+        <!-- 文章内容包装器 -->
         <div class={`p-6 ${siteConfig.postOptions.showPostCardCoverImages !== 'none' && post.data.image && post.data.hideCoverImage !== true ? 'rounded-b-lg' : 'rounded-lg'}`}>
-          <!-- Post header -->
+          <!-- 文章页眉 -->
           <header class="mb-4">
           <h1 class="text-xl font-bold text-primary-900 dark:text-primary-50 mb-6 leading-tight">
             {post.data.title}
@@ -224,8 +224,8 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
                 <span class="text-primary-300 dark:text-primary-600 hidden sm:inline">•</span>
                 <span class="text-primary-300 dark:text-primary-600 sm:hidden">•</span>
                 <span>
-                  <span class="hidden sm:inline">{readingTime.text && readingTime.text !== 'read0' && readingTime.text !== '' ? readingTime.text : '1 min read'}</span>
-                  <span class="sm:hidden">{getReadingTimeMobile(readingTime)}</span>
+                  <span class="hidden sm:inline">{readingTime.text && readingTime.text !== 'read0' && readingTime.text !== '' ? readingTime.text.replace('min read', '分钟阅读') : '1 分钟阅读'}</span>
+                  <span class="sm:hidden">{getReadingTimeMobile(readingTime).replace('min', '分钟')}</span>
                 </span>
               </>
             )}
@@ -235,8 +235,8 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
                 <span class="text-primary-300 dark:text-primary-600 hidden sm:inline">•</span>
                 <span class="text-primary-300 dark:text-primary-600 sm:hidden">•</span>
                 <span class="min-w-0">
-                  <span class="hidden sm:inline">{wordCount === 1 ? '1 word' : `${wordCount} words`}</span>
-                  <span class="sm:hidden">{wordCount === 1 ? '1 word' : `${wordCount.toLocaleString()} words`}</span>
+                  <span class="hidden sm:inline">{wordCount === 1 ? '1 字' : `${wordCount} 字`}</span>
+                  <span class="sm:hidden">{wordCount === 1 ? '1 字' : `${wordCount.toLocaleString()} 字`}</span>
                 </span>
               </>
             )}
@@ -256,7 +256,7 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
           )}
         </header>
 
-        <!-- Article content -->
+        <!-- 文章内容 -->
         <div class="prose dark:prose-dark max-w-none" id="post-content">
           <Content />
         </div>
@@ -265,7 +265,7 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
           <LinkedMentions currentSlug={post.id} />
         )}
 
-        <!-- Post navigation -->
+        <!-- 文章导航 -->
         {siteConfig.postOptions.postNavigation && (prevPost || nextPost) && (
           <nav class="mt-8 pt-8 border-t border-primary-200 dark:border-primary-700">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -304,7 +304,7 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
           </nav>
         )}
 
-        <!-- Giscus Comments -->
+        <!-- Giscus 评论 -->
         {siteConfig.postOptions.comments.enabled && (
           <div class="mt-16">
             <GiscusComments
@@ -317,7 +317,7 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
         </div>
       </article>
 
-      <!-- Desktop Sidebar - floats to the right of the content container -->
+      <!-- 桌面端侧边栏 - 浮动在内容容器的右侧 -->
       <div class="hidden xl:block absolute top-0 left-full ml-1 w-64">
         <div class={`top-24 ${hasLocalGraphConnections || shouldShowTOC ? 'space-y-4' : ''}`} id="sidebar">
           {hasLocalGraphConnections && (
@@ -340,14 +340,14 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
   <Fragment slot="scripts">
     <script define:vars={{ posts: visiblePosts, commentsEnabled: siteConfig.postOptions.comments.enabled, postTitle: post.data.title, postSlug: post.id }}>
 
-      // Process wikilinks - unified logic for all wikilink types
+      // 处理维基链接 - 所有维基链接类型的统一逻辑
       function initializeWikilinks() {
         const wikilinks = document.querySelectorAll('.wikilink[data-wikilink]');
 
         wikilinks.forEach(link => {
           const linkText = link.dataset.wikilink;
           
-          // Skip same-page anchors (empty data-wikilink) - they're already properly formatted
+          // 跳过同页锚点（空的 data-wikilink）- 它们已经正确格式化
           if (!linkText || linkText === '') {
             return;
           }
@@ -355,14 +355,14 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
           const displayOverride = link.dataset.displayOverride;
           const currentDisplayText = link.textContent;
 
-          // Find the matching post - use id (not slug, which is deprecated in Astro v6)
+          // 查找匹配的文章 - 使用 id（不是 slug，在 Astro v6 中已弃用）
           const slug = linkText.toLowerCase()
             .replace(/[^a-z0-9\s-]/g, '')
             .replace(/\s+/g, '-')
             .replace(/-+/g, '-')
             .replace(/^-+|-+$/g, '');
 
-          // Helper function to create slug from title (same as resolveWikilink logic)
+          // 从标题创建 slug 的辅助函数（与 resolveWikilink 逻辑相同）
           const createSlugFromTitle = (title) => {
             return title.toLowerCase()
               .replace(/[^a-z0-9\s-]/g, '')
@@ -371,16 +371,16 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
               .replace(/^-+|-+$/g, '');
           };
 
-          // First try exact id match (Astro v6 uses id, not slug)
+          // 首先尝试精确的 id 匹配（Astro v6 使用 id，不是 slug）
           let post = posts.find(p => p.id === slug);
           
-          // If not found, try title match (for wikilinks that use post titles)
+          // 如果未找到，尝试标题匹配（用于使用文章标题的维基链接）
           if (!post) {
             post = posts.find(p => createSlugFromTitle(p.data.title) === slug);
           }
 
           if (post) {
-            // Update href - preserve anchor if present
+            // 更新 href - 如果存在锚点则保留
             const currentHref = link.href || link.getAttribute('href') || '';
             const anchorMatch = currentHref.match(/#(.+)$/);
             const anchor = anchorMatch ? anchorMatch[1] : null;
@@ -391,47 +391,47 @@ if (siteConfig.postOptions.graphView.enabled && siteConfig.postOptions.graphView
               link.href = `/posts/${post.id}`;
             }
 
-            // Simple logic:
-            // - If displayOverride exists and is not null, it's a wikilink with custom text [[link|display]] - use it
-            // - If displayOverride is null/undefined, it's a standard markdown link [text](url) - NEVER change the text
-            // - If displayOverride is empty string, it's a naked wikilink [[link]] - use post title
+            // 简单逻辑：
+            // - 如果 displayOverride 存在且不为 null，它是带有自定义文本的维基链接 [[link|display]] - 使用它
+            // - 如果 displayOverride 为 null/undefined，它是标准的 markdown 链接 [text](url) - 永不更改文本
+            // - 如果 displayOverride 为空字符串，它是裸维基链接 [[link]] - 使用文章标题
 
             if (displayOverride && displayOverride !== 'null' && displayOverride !== 'undefined') {
-              // Wikilink with custom display: [[link|display]]
+              // 带有自定义显示的维基链接：[[link|display]]
               link.textContent = displayOverride;
             } else if (displayOverride === 'null' || displayOverride === null || displayOverride === 'undefined' || displayOverride === undefined) {
-              // Standard markdown link: [text](url) - NEVER change the display text
-              // Keep currentDisplayText as-is
+              // 标准的 markdown 链接：[text](url) - 永不更改显示文本
+              // 保持 currentDisplayText 不变
             } else {
-              // Naked wikilink: [[link]] - use post title
+              // 裸维基链接：[[link]] - 使用文章标题
               link.textContent = post.data.title;
             }
           } else {
-            // Mark as broken link
+            // 标记为损坏的链接
             link.classList.add('wikilink-broken');
-            link.title = 'Link not found';
+            link.title = '链接未找到';
           }
         });
       }
 
-      // Make function globally available for Swup re-initialization
+      // 使函数在全局可用，用于 Swup 重新初始化
       window.initializeWikilinks = initializeWikilinks;
 
-      // Process wikilinks and initialize layouts after content loads
+      // 在内容加载后处理维基链接并初始化布局
       document.addEventListener('DOMContentLoaded', () => {
-        // Process external links - handled by BaseLayout, but call here as backup for initial load
+        // 处理外部链接 - 由 BaseLayout 处理，但在此处调用作为初始加载的备用方案
         if (window.processExternalLinks) {
           window.processExternalLinks();
         }
 
-        // Initialize wikilinks on initial load
+        // 在初始加载时初始化维基链接
         initializeWikilinks();
       });
 
-      // External links are now handled globally by BaseLayout Swup hooks
+      // 外部链接现在由 BaseLayout Swup 钩子全局处理
 
     </script>
   </Fragment>
 
-  <!-- Lightbox is handled globally by BaseLayout -->
+  <!-- Lightbox 由 BaseLayout 全局处理 -->
 </BaseLayout>
