@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "src/content/posts/芒市红房子自助火锅.mdx",
+                "file": "src/content/docs/configuration.md",
                 "mode": "source",
-                "source": false
+                "source": true
               },
               "icon": "lucide-file",
-              "title": "芒市红房子自助火锅"
+              "title": "configuration"
             }
           }
         ]
@@ -98,7 +98,7 @@
         "state": {
           "type": "backlink",
           "state": {
-            "file": "src/content/posts/芒市红房子自助火锅.mdx",
+            "file": "src/content/docs/configuration.md",
             "collapseAll": false,
             "extraContext": false,
             "sortOrder": "alphabetical",
@@ -155,22 +155,26 @@
   },
   "active": "db0a4dddb7358c3e",
   "lastOpenFiles": [
+    "src/content/docs/公共 dns.md",
+    "src/content/posts/getting-started.md",
+    "src/content/special/404.md",
+    "src/content/docs/api.md",
+    "src/content/posts/formatting-reference.md",
+    "src/content/posts/腾冲金鸡铜瓢苑.mdx",
+    "src/content/posts/芒市一禾酒店.mdx",
+    "src/content/posts/芒市品滇边境食堂.mdx",
     "src/content/posts/芒市芒杏村.mdx",
-    "src/content/posts/芒市红房子自助火锅.md",
+    "src/content/posts/昆明玉溪小吃店.mdx",
     "src/content/posts/芒市红房子自助火锅.mdx",
+    "src/content/posts/直饮水.md",
+    "src/content/posts/芒市红房子自助火锅.md",
     "/src/content/posts/芒市红房子自助火锅.mdx",
     "/src/content/posts",
     "/src/content",
     "/src",
-    "src/content/posts/formatting-reference.md",
-    "src/content/posts/昆明玉溪小吃店.mdx",
-    "src/content/posts/直饮水.md",
     "src/content/posts/sample-folder-based-post/forest.png",
     "src/content/posts/测试同步.md",
     "src/content/posts/attachments/galaxy.png",
-    "/src/utils/markdown.ts",
-    "/src/utils",
-    "/src/pages/projects/index.astro",
     "/src/content/special/projects.md",
     "/src/content/special/posts.md",
     "/src/content/special/home.md",
@@ -197,9 +201,6 @@
     "src/content/pages/thank-you.md",
     "src/content/special/posts.md",
     "src/content/special/docs.md",
-    "src/content/special/404.md",
-    "src/content/special/home.md",
-    "src/content/special/projects.md",
     "未命名.canvas"
   ]
 }
