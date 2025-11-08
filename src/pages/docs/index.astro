@@ -8,34 +8,34 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageLayout from '@/layouts/PageLayout.astro';
 import DocumentationCard from '@/components/DocumentationCard.astro';
 import TableOfContents from '@/components/TableOfContents.astro';
-import Icon from '@/components/Icon.astro';
+import Icon from './Icon.astro';
 
-// Check if docs are enabled and handle fallback
+// 检查文档是否启用并处理回退
 let fallbackPage = null;
 
 if (!siteConfig.optionalContentTypes.docs) {
-  // Check for fallback page in pages collection
+  // 检查 pages 集合中的回退页面
   try {
     fallbackPage = await getEntry('pages', 'docs');
     if (fallbackPage) {
-      // PageLayout will handle the rendering
+      // PageLayout 将处理渲染
     } else {
       return Astro.redirect('/404');
     }
   } catch (error) {
-    // No fallback page found, redirect to 404
+    // 未找到回退页面，重定向到 404
     return Astro.redirect('/404');
   }
 }
 
-// Get all docs
+// 获取所有文档
 const allDocs = await getCollection('docs');
 const isDev = import.meta.env.DEV;
 
-// Filter documentation
+// 过滤文档
 const visibleDocs = allDocs.filter(doc => shouldShowContent(doc, isDev));
 
-// Get docs page content from special collection
+// 从特殊集合获取文档页面内容
 let docsPageContent = null;
 let docsPageHideTOC = false;
 let DocsPageContent = null;
@@ -48,42 +48,42 @@ try {
     docsPageHideTOC = docsPageContent.data.hideTOC === true;
   }
 } catch (error) {
-  // Fallback to default if docs.md doesn't exist
+  // 如果 docs.md 不存在，回退到默认
 }
 
-// Check if any docs have categories
+// 检查是否有文档有分类
 const docsHaveCategories = hasDocCategories(visibleDocs);
 
-// Group docs by category or list them without categories
+// 按分类分组文档或列出没有分类的文档
 let docsByCategory: Record<string, typeof visibleDocs>;
 let sortedCategories: string[];
 let tocHeadings: any[];
 let shouldShowTOC: boolean;
 
-// Always group docs by category (creates "Unsorted" for docs without categories)
+// 始终按分类分组文档（为没有分类的文档创建"未分类"）
 docsByCategory = groupDocsByCategory(visibleDocs);
 sortedCategories = Object.keys(docsByCategory).sort();
 
 if (docsHaveCategories) {
-  // Generate TOC headings from categories
+  // 从分类生成目录标题
   tocHeadings = sortedCategories.map(category => ({
     depth: 2,
     slug: `category-${category.toLowerCase().replace(/\s+/g, '-')}`,
     text: category
   }));
 } else {
-  // No real categories - just list docs by order without TOC headings
+  // 没有真实分类 - 仅按顺序列出文档，没有目录标题
   tocHeadings = [];
 }
 
-// Show TOC if not hidden and there are headings to show
+// 如果未隐藏且有要显示的标题，则显示目录
 shouldShowTOC = !docsPageHideTOC && tocHeadings.length > 0;
 
 
-// Generate SEO data
+// 生成 SEO 数据
 const seoData = generatePostsListSEO(import.meta.env.SITE || '', undefined);
-seoData.title = docsPageContent?.data.title ? `${docsPageContent.data.title} | ${siteConfig.title}` : `Documentation | ${siteConfig.title}`;
-seoData.description = docsPageContent?.data.description || `Browse all documentation on ${siteConfig.title}`;
+seoData.title = docsPageContent?.data.title ? `${docsPageContent.data.title} | ${siteConfig.title}` : `文档 | ${siteConfig.title}`;
+seoData.description = docsPageContent?.data.description || `浏览 ${siteConfig.title} 上的所有文档`;
 seoData.noIndex = (docsPageContent?.data as any)?.noIndex || false;
 ---
 
@@ -93,10 +93,10 @@ seoData.noIndex = (docsPageContent?.data as any)?.noIndex || false;
 <BaseLayout seoData={seoData}>
   <div class="py-8 relative">
     <div class="mx-auto px-4 sm:px-6 lg:px-8" style={`max-width: ${siteConfig.layout.contentWidth}`}>
-      <!-- Page header -->
+      <!-- 页面页眉 -->
       <header class="mb-8">
         <h1 class="text-lg font-bold text-primary-900 dark:text-primary-50 mb-3">
-          {docsPageContent?.data.title || 'Documentation'}
+          {docsPageContent?.data.title || '文档'}
         </h1>
         {DocsPageContent ? (
           <div class="prose prose-sm dark:prose-dark max-w-none">
@@ -104,12 +104,12 @@ seoData.noIndex = (docsPageContent?.data as any)?.noIndex || false;
           </div>
         ) : (
           <p class="text-primary-600 dark:text-primary-300">
-            Guides, tutorials, and reference materials
+            指南、教程和参考资料
           </p>
         )}
       </header>
 
-      <!-- Documentation by category -->
+      <!-- 按分类组织的文档 -->
       {sortedCategories.length > 0 ? (
         <div class="relative">
           <div class="space-y-12">
@@ -117,7 +117,7 @@ seoData.noIndex = (docsPageContent?.data as any)?.noIndex || false;
               <section id={`category-${category.toLowerCase().replace(/\s+/g, '-')}`}>
                 {docsHaveCategories && (
                   <h2 class="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-6 pb-2 border-b border-primary-200 dark:border-primary-700">
-                    <a href={`#category-${category.toLowerCase().replace(/\s+/g, '-')}`} class="anchor-link text-primary-900 dark:text-primary-50 hover:text-highlight-600 dark:hover:text-highlight-400 no-underline transition-colors duration-200" aria-label="Link to this section">
+                    <a href={`#category-${category.toLowerCase().replace(/\s+/g, '-')}`} class="anchor-link text-primary-900 dark:text-primary-50 hover:text-highlight-600 dark:hover:text-highlight-400 no-underline transition-colors duration-200" aria-label="链接到此部分">
                       {category}
                     </a>
                   </h2>
@@ -138,7 +138,7 @@ seoData.noIndex = (docsPageContent?.data as any)?.noIndex || false;
 
         </div>
 
-        <!-- Desktop TOC - floats to the right of the content container -->
+        <!-- 桌面端目录 - 浮动在内容容器的右侧 -->
         {shouldShowTOC && (
           <div class="hidden xl:block absolute top-0 left-full ml-1 w-64">
             <div class="sticky top-24" id="toc">
@@ -150,10 +150,10 @@ seoData.noIndex = (docsPageContent?.data as any)?.noIndex || false;
         <div class="text-center py-12">
           <Icon name="book-open" class="w-12 h-12 text-primary-300 dark:text-primary-600 mx-auto mb-4" />
           <h3 class="text-lg font-medium text-primary-900 dark:text-primary-50 mb-2">
-            No documentation yet
+            暂无文档
           </h3>
           <p class="text-primary-600 dark:text-primary-300">
-            Check back soon for guides and tutorials!
+            请稍后再来查看指南和教程！
           </p>
         </div>
       )}
@@ -162,20 +162,20 @@ seoData.noIndex = (docsPageContent?.data as any)?.noIndex || false;
 
   <Fragment slot="scripts">
     <script>
-      // Custom scroll behavior for documentation categories
+      // 文档分类的自定义滚动行为
       document.addEventListener('DOMContentLoaded', () => {
         const tocLinks = document.querySelectorAll('.toc-link');
         const categorySections = document.querySelectorAll('section[id^="category-"]');
 
         if (!tocLinks.length || !categorySections.length) return;
 
-        // Enhanced highlight function for categories
+        // 增强的分类高亮功能
         function highlightTOC() {
           let current = '';
 
           categorySections.forEach(section => {
             const rect = section.getBoundingClientRect();
-            // More precise threshold for categories
+            // 更精确的分类阈值
             if (rect.top <= 120) {
               current = section.id;
             }
@@ -191,7 +191,7 @@ seoData.noIndex = (docsPageContent?.data as any)?.noIndex || false;
           });
         }
 
-        // Smooth scroll with better positioning for categories
+        // 平滑滚动，为分类提供更好的定位
         tocLinks.forEach(link => {
           link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -200,7 +200,7 @@ seoData.noIndex = (docsPageContent?.data as any)?.noIndex || false;
             const targetElement = document.getElementById(targetId);
 
             if (targetElement) {
-              // Better scroll positioning for categories
+              // 为分类提供更好的滚动定位
               const headerOffset = 80;
               const elementPosition = targetElement.getBoundingClientRect().top;
               const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
@@ -213,10 +213,10 @@ seoData.noIndex = (docsPageContent?.data as any)?.noIndex || false;
           });
         });
 
-        // Initial highlight
+        // 初始高亮
         highlightTOC();
 
-        // Update on scroll
+        // 滚动时更新
         let ticking = false;
         window.addEventListener('scroll', () => {
           if (!ticking) {
