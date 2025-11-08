@@ -60,7 +60,7 @@ export function calculateReadingTime(content: string): ReadingTime {
   // Handle empty or undefined content
   if (!content || typeof content !== "string") {
     return {
-      text: "1 min read",
+      text: "1 分钟阅读",
       minutes: 1,
       time: 60000,
       words: 0,
@@ -129,7 +129,7 @@ export function getReadingTime(
 
   // Default for no content and no valid remark data
   return {
-    text: "1 min read",
+    text: "1 分钟阅读",
     minutes: 1,
     time: 60000,
     words: 0,
@@ -209,14 +209,14 @@ export function formatDateMobile(date: Date): string {
       date.getUTCMonth(),
       date.getUTCDate()
     );
-    return localDate.toLocaleDateString("en-US", {
+    return localDate.toLocaleDateString("zh-CN", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
   }
 
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString("zh-CN", {
     year: "numeric",
     month: "short",
     day: "numeric",
