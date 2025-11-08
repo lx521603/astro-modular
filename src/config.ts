@@ -187,7 +187,7 @@ export const siteConfig: SiteConfig = {
   // [CONFIG:SITE_AUTHOR]
   author: "David V. Kimball",
   // [CONFIG:SITE_LANGUAGE]
-  language: "en",
+  language: "zh-CN",
   // [CONFIG:FAVICON_THEME_ADAPTIVE]
   faviconThemeAdaptive: true, // 如果为 true，favicon 会根据浏览器的系统主题偏好切换 favicon-dark.png 和 favicon-light.png。如果为 false，则始终使用 favicon.png
   // [CONFIG:DEFAULT_OG_IMAGE_ALT]
