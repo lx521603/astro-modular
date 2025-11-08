@@ -10,30 +10,30 @@ export interface Props {
 const { pagination, baseUrl = '/posts' } = Astro.props;
 const { currentPage, totalPages, hasNext, hasPrev } = pagination;
 
-// Generate page numbers to show
+// 生成要显示的页码
 function generatePageNumbers(current: number, total: number) {
   const pages: (number | string)[] = [];
-  const delta = 2; // Number of pages to show on each side of current page
+  const delta = 2; // 当前页两侧要显示的页面数量
 
-  // Always show first page
+  // 始终显示第一页
   pages.push(1);
 
-  // Add ellipsis if needed
+  // 如果需要添加省略号
   if (current - delta > 2) {
     pages.push('...');
   }
 
-  // Add pages around current page
+  // 添加当前页周围的页面
   for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
     pages.push(i);
   }
 
-  // Add ellipsis if needed
+  // 如果需要添加省略号
   if (current + delta < total - 1) {
     pages.push('...');
   }
 
-  // Always show last page if there's more than one page
+  // 如果有多于一页，始终显示最后一页
   if (total > 1) {
     pages.push(total);
   }
@@ -53,8 +53,8 @@ const prevUrl = hasPrev
 ---
 
 {totalPages > 1 && (
-  <nav class="flex items-center justify-between py-8" aria-label="Pagination">
-    <!-- Previous page -->
+  <nav class="flex items-center justify-between py-8" aria-label="分页">
+    <!-- 上一页 -->
     <div class="flex-1 flex justify-start">
       {hasPrev ? (
         <a
@@ -62,17 +62,17 @@ const prevUrl = hasPrev
           class="inline-flex items-center px-4 py-2 text-sm font-medium text-primary-600 dark:text-primary-300 bg-white dark:bg-primary-900 border border-primary-300 dark:border-primary-600 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-800 hover:text-primary-800 dark:hover:text-primary-200 transition-colors"
         >
           <Icon name="arrow-left" class="w-4 h-4 mr-2" />
-          Previous
+          上一页
         </a>
       ) : (
         <span class="inline-flex items-center px-4 py-2 text-sm font-medium text-primary-400 dark:text-primary-500 bg-primary-100 dark:bg-primary-800 border border-primary-200 dark:border-primary-700 rounded-lg cursor-not-allowed">
           <Icon name="arrow-left" class="w-4 h-4 mr-2" />
-          Previous
+          上一页
         </span>
       )}
     </div>
 
-    <!-- Page numbers -->
+    <!-- 页码 -->
     <div class="hidden md:flex items-center space-x-2">
       {pageNumbers.map(page => (
         typeof page === 'number' ? (
@@ -95,26 +95,26 @@ const prevUrl = hasPrev
       ))}
     </div>
 
-    <!-- Mobile page indicator -->
+    <!-- 移动端页面指示器 -->
     <div class="md:hidden flex items-center space-x-2 text-sm text-primary-600 dark:text-primary-300">
       <span>
-        Page {currentPage} of {totalPages}
+        第 {currentPage} 页，共 {totalPages} 页
       </span>
     </div>
 
-    <!-- Next page -->
+    <!-- 下一页 -->
     <div class="flex-1 flex justify-end">
       {hasNext ? (
         <a
           href={nextUrl || `${baseUrl}/${currentPage + 1}`}
           class="inline-flex items-center px-4 py-2 text-sm font-medium text-primary-600 dark:text-primary-300 bg-white dark:bg-primary-900 border border-primary-300 dark:border-primary-600 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-800 hover:text-primary-800 dark:hover:text-primary-200 transition-colors"
         >
-          Next
+          下一页
           <Icon name="arrow-right" class="w-4 h-4 ml-2" />
         </a>
       ) : (
         <span class="inline-flex items-center px-4 py-2 text-sm font-medium text-primary-400 dark:text-primary-500 bg-primary-100 dark:bg-primary-800 border border-primary-200 dark:border-primary-700 rounded-lg cursor-not-allowed">
-          Next
+          下一页
           <Icon name="arrow-right" class="w-4 h-4 ml-2" />
         </span>
       )}
@@ -123,29 +123,29 @@ const prevUrl = hasPrev
 )}
 
 <style>
-  /* Enhanced pagination styles */
-  nav[aria-label="Pagination"] {
+  /* 增强的分页样式 */
+  nav[aria-label="分页"] {
     @apply select-none;
   }
 
-  /* Smooth transitions for all interactive elements */
-  nav[aria-label="Pagination"] a,
-  nav[aria-label="Pagination"] span {
+  /* 所有交互元素的平滑过渡 */
+  nav[aria-label="分页"] a,
+  nav[aria-label="分页"] span {
     @apply transition-all duration-200;
   }
 
-  /* Focus styles */
-  nav[aria-label="Pagination"] a:focus-visible {
+  /* 焦点样式 */
+  nav[aria-label="分页"] a:focus-visible {
     @apply outline-none ring-2 ring-highlight-500 ring-offset-2;
   }
 
-  /* Active page enhancement */
-  nav[aria-label="Pagination"] [aria-current="page"] {
+  /* 当前页面增强 */
+  nav[aria-label="分页"] [aria-current="page"] {
     @apply shadow-lg;
   }
 
-  /* Hover effects */
-  nav[aria-label="Pagination"] a:hover {
+  /* 悬停效果 */
+  nav[aria-label="分页"] a:hover {
     @apply transform scale-105;
   }
 </style>
