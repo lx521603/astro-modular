@@ -11,7 +11,7 @@ export interface Props {
 
 const { categories, currentCategory, showCount = false, variant = 'default' } = Astro.props;
 
-// Sort categories alphabetically
+// 按字母顺序排序分类
 const sortedCategories = [...categories].sort();
 ---
 
@@ -19,7 +19,7 @@ const sortedCategories = [...categories].sort();
   <div class="categories-container p-4 bg-white dark:bg-primary-900 rounded-xl border border-primary-200 dark:border-primary-700 shadow-lg backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
     <h3 class="font-semibold text-primary-900 dark:text-primary-50 mb-3 flex items-center text-sm">
       <Icon name="folder-open" class="w-4 h-4 mr-2" />
-      Categories
+      分类
     </h3>
 
     <div class="flex flex-wrap gap-2">
@@ -35,7 +35,7 @@ const sortedCategories = [...categories].sort();
           <span class="category-text">{category}</span>
           {showCount && (
             <span class="category-count">
-              {/* This would be populated by JavaScript */}
+              {/* 这里将通过 JavaScript 填充 */}
             </span>
           )}
         </button>
@@ -77,22 +77,22 @@ const sortedCategories = [...categories].sort();
     @apply transform scale-105 shadow-md;
   }
 
-  /* Active category hover state - keep active colors, just add grow effect */
+  /* 激活分类的悬停状态 - 保持激活颜色，只添加放大效果 */
   .category-item.bg-highlight-100:hover {
     @apply transform scale-105 shadow-md;
-    /* Keep the active background and text colors - don't override them */
+    /* 保持激活的背景和文字颜色 - 不要覆盖它们 */
   }
   
   .category-item.dark\:bg-highlight-900\/40:hover {
     @apply transform scale-105 shadow-md;
-    /* Keep the active background and text colors - don't override them */
+    /* 保持激活的背景和文字颜色 - 不要覆盖它们 */
   }
 
   .category-text {
     @apply truncate max-w-32;
   }
 
-  /* Responsive adjustments */
+  /* 响应式调整 */
   @media (max-width: 640px) {
     .category-item {
       @apply text-xs px-2 py-1;
@@ -103,4 +103,3 @@ const sortedCategories = [...categories].sort();
     }
   }
 </style>
-
