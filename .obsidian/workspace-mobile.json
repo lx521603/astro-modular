@@ -11,10 +11,14 @@
             "id": "db0a4dddb7358c3e",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "src/content/posts/芒市芒杏村.mdx",
+                "mode": "source",
+                "source": true
+              },
               "icon": "lucide-file",
-              "title": "新标签页"
+              "title": "芒市芒杏村"
             }
           }
         ]
@@ -94,6 +98,7 @@
         "state": {
           "type": "backlink",
           "state": {
+            "file": "src/content/posts/芒市芒杏村.mdx",
             "collapseAll": false,
             "extraContext": false,
             "sortOrder": "alphabetical",
@@ -150,9 +155,11 @@
   },
   "active": "db0a4dddb7358c3e",
   "lastOpenFiles": [
+    "src/content/posts/芒市红房子自助火锅.md",
     "src/content/posts/formatting-reference.md",
-    "src/content/posts/直饮水.md",
     "src/content/posts/芒市芒杏村.mdx",
+    "src/content/posts/昆明玉溪小吃店.mdx",
+    "src/content/posts/直饮水.md",
     "src/content/posts/sample-folder-based-post/forest.png",
     "src/content/posts/测试同步.md",
     "src/content/posts/attachments/galaxy.png",
@@ -164,7 +171,6 @@
     "/src/pages/posts/tag/[...tag]/[page].astro",
     "/src/pages/posts/tag/[...tag]",
     "/src/pages/posts/tag",
-    "/src/pages/posts/index.astro",
     "/src/content/special/projects.md",
     "/src/content/special/posts.md",
     "/src/content/special/home.md",
@@ -194,7 +200,6 @@
     "src/content/special/404.md",
     "src/content/special/home.md",
     "src/content/special/projects.md",
-    "src/content/docs/configuration.md",
     "未命名.canvas"
   ]
 }
