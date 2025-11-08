@@ -4,19 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "0c769e12d9628b80",
+        "id": "89a07a68e98fb753",
         "type": "tabs",
         "children": [
           {
-            "id": "dca5b584e0342084",
+            "id": "db0a4dddb7358c3e",
             "type": "leaf",
             "state": {
-              "type": "image",
-              "state": {
-                "file": "src/content/posts/sample-folder-based-post/forest.png"
-              },
-              "icon": "lucide-image",
-              "title": "forest"
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
             }
           }
         ]
@@ -150,12 +148,14 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "dca5b584e0342084",
+  "active": "db0a4dddb7358c3e",
   "lastOpenFiles": [
-    "src/content/posts/测试同步.md",
-    "src/content/posts/sample-folder-based-post/forest.png",
-    "src/content/posts/attachments/galaxy.png",
+    "src/content/posts/formatting-reference.md",
     "src/content/posts/直饮水.md",
+    "src/content/posts/芒市芒杏村.mdx",
+    "src/content/posts/sample-folder-based-post/forest.png",
+    "src/content/posts/测试同步.md",
+    "src/content/posts/attachments/galaxy.png",
     "/src/utils/markdown.ts",
     "/src/utils",
     "/src/pages/projects/index.astro",
@@ -165,14 +165,12 @@
     "/src/pages/posts/tag/[...tag]",
     "/src/pages/posts/tag",
     "/src/pages/posts/index.astro",
-    "/src/pages/posts/[page].astro",
     "/src/content/special/projects.md",
     "/src/content/special/posts.md",
     "/src/content/special/home.md",
     "/src/content/special/docs.md",
     "/src/content/special/404.md",
     "测试.md",
-    "src/content/posts/formatting-reference.md",
     "README.md",
     "AGENTS.md",
     "public/pages/attachments/water.png",
